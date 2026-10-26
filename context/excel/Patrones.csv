@@ -1,0 +1,13 @@
+ID,Operación,Usuario,Tipo (lectura/escritura),Datos que requiere,Frecuencia
+P1,Registrar paciente nuevo,Médico,Escritura,"Nombre, edad, fecha de nacimiento, tipo de sangre, antecedentes, alergias",Media: cada vez que llega un paciente nuevo
+P2,Registrar expediente o antecedentes con los que llega el paciente,Médico,Escritura,Expediente o antecedentes previos del paciente (formato pendiente: se pidió ejemplo),Baja: cuando el paciente llega con expediente o antecedentes
+P3,Registrar mediciones del paciente,Ayudante (según indica el doctor),Escritura,"Peso (báscula), altura, porcentaje de grasa, mediciones con pinza y cinta métrica, azúcar en sangre, presión",Alta: al registrar un paciente nuevo y en cada seguimiento
+P4,Consultar historial completo del paciente,Médico,Lectura,Todo el historial del paciente,Alta: cada vez que llega el paciente
+P5,Registrar seguimiento (monitoreo o revisión),Médico,Escritura,Datos del seguimiento (no detallados por el cliente),"Alta: varias veces al mes; pacientes regresan semanal, mensual o anualmente"
+P6,Realizar cálculos,Médico,Lectura,Mediciones del paciente; tipos de cálculo según hojas de pacientes (pendientes); cálculos pesados en Excel,Alta (supuesto): en cada consulta; el cliente no la especificó
+P7,Registrar dietas y medicamento,Médico,Escritura,"Dietas, medicamento",Alta (supuesto): en cada consulta; el cliente no la especificó
+P8,Clasificar pacientes por padecimiento,Médico,Escritura,Pacientes en tablas y su clasificación por padecimiento,Media: cada vez que llega un paciente nuevo
+P9,Conectar paciente con familiares,Médico,Escritura,Relación entre pacientes familiares,Baja (supuesto): el cliente no la especificó
+P10,Consultar historial o antecedentes de familiares,Médico,Lectura,Historial o antecedentes de los pacientes familiares conectados,Baja (supuesto): el cliente no la especificó
+P11,Entregar expediente al paciente,Médico,Lectura,Expediente del paciente,"Baja: cuando el paciente lo solicite, aunque ya no regrese"
+P12,Listar pacientes por padecimiento,Médico,Lectura,"Nombre, fecha de nacimiento y padecimientos de los pacientes con un padecimiento dado",Media (supuesto): al revisar sus tablas de pacientes clasificados

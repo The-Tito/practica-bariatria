@@ -1,0 +1,25 @@
+Regla de negocio,¿Quién la garantiza? (motor/aplicación),Cómo
+"RN-01: Campos obligatorios y tipos
+Paciente: nombre_completo, fecha_nacimiento, tipo_sangre, alergias y padecimientos. Consulta: paciente_id, fecha, tipo, estudio y mediciones. alergias es obligatorio aunque vaya vacío: vacío significa ""sin alergias conocidas""; ausente significa ""no se preguntó"".",Motor,"Validador $jsonSchema en cada colección (required + bsonType) con validationLevel: ""strict"" y validationAction: ""error"". Un documento incompleto o con un tipo incorrecto se rechaza antes de guardarse."
+"RN-02: Valores permitidos
+tipo_sangre solo puede ser A+, A-, B+, B-, AB+, AB-, O+ u O-. consultas.tipo solo puede ser ""inicial"" o ""seguimiento"".",Motor,"enum dentro del $jsonSchema. Son listas fijas que no cambian, así que pueden vivir en el esquema."
+"RN-03: Mediciones en rangos físicamente posibles
+Por ejemplo peso_kg entre 20 y 400, altura_cm entre 50 y 250, presión sistólica entre 50 y 300.",Motor,minimum / maximum en el $jsonSchema de consultas.mediciones. Detecta errores de captura como 1184 en lugar de 118.4. Los rangos exactos se confirman con el médico.
+"RN-04: Una sola consulta inicial por paciente
+El porcentaje de peso perdido se calcula contra la medición inicial; dos consultas iniciales harían ambigua la línea base.",Motor,"Índice único parcial: consultas { paciente_id: 1 } con partialFilterExpression { tipo: ""inicial"" }. Una segunda consulta inicial para el mismo paciente falla con error de llave duplicada. Es una regla de unicidad, por eso la garantiza el motor."
+"RN-05: Toda consulta pertenece a un paciente existente
+No puede haber consultas cuyo paciente_id no apunte a ningún paciente.",Aplicación,"MongoDB no tiene llaves foráneas: acepta cualquier ObjectId en paciente_id. Antes de insertar, la aplicación confirma que el paciente existe (findOne por _id, que está indexado). Como los pacientes nunca se borran (RN-11), la referencia no se rompe después. Es una regla de existencia de referencia, por eso la garantiza la aplicación."
+"RN-06: El parentesco se registra en ambos pacientes
+Si A es madre de B, B debe aparecer como hija o hijo de A.",Aplicación,"Transacción de varios documentos (session.withTransaction) que actualiza a los dos pacientes con $addToSet y el parentesco inverso (madre ↔ hija/hijo, padre ↔ hija/hijo, hermano ↔ hermano). Si una escritura falla, no se aplica ninguna."
+"RN-07: Sin padecimientos repetidos y solo códigos del catálogo
+Un paciente no puede tener dos veces el mismo padecimiento.",Aplicación,"Se agrega con $addToSet, que no duplica. La aplicación valida el código contra el catálogo de padecimientos. No se pone como enum en el esquema porque el catálogo puede crecer y cambiarlo exigiría modificar el validador."
+"RN-08: Un expediente externo siempre tiene su archivo (P2)
+No debe existir un metadato en el paciente que apunte a un archivo inexistente.",Aplicación,"Orden fijo: primero se sube el archivo a GridFS y, solo si terminó bien, se agrega el metadato al paciente. Si falla el segundo paso queda un archivo huérfano, que se detecta por metadata.paciente_id y se vuelve a ligar. Nunca queda un metadato sin archivo."
+"RN-09: Ayudante y médico no se borran datos en la misma consulta
+El ayudante escribe mediciones (P3) y el médico notas, dieta y medicamentos (P5, P7) en el mismo documento y en la misma visita.",Aplicación,Cada quien actualiza solo sus campos con updateOne + $set (mediciones o notas/dieta/medicamentos). Está prohibido replaceOne o reescribir el documento completo. El motor garantiza que cada $set es atómico; la aplicación garantiza no reemplazar lo que escribió el otro.
+"RN-10: Los cálculos corresponden a sus mediciones
+El IMC guardado debe ser el de las mediciones de esa misma consulta.",Aplicación,"La aplicación calcula y guarda mediciones y calculos en el mismo updateOne (P3). Al ser una sola escritura sobre un solo documento, nunca quedan unos sin los otros."
+"RN-11: Nada se borra durante 15 años
+Pacientes, consultas y expedientes se conservan aunque el paciente no regrese.",Motor,"Rol personalizado para el usuario de la aplicación con privilegios find, insert y update, sin remove ni drop. Un borrado se rechaza en el servidor. La retención se impone con permisos, no con la disciplina de quien programa."
+"RN-12: Lo indicado en una consulta pasada no se modifica
+Dieta, medicamentos y mediciones de una visita anterior son hechos históricos.",Aplicación,"La aplicación solo permite editar la consulta del día. Depende de la fecha y del flujo de la visita, que el esquema no puede expresar. Una corrección posterior se registra en notas, sin alterar lo indicado."

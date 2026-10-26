@@ -1,0 +1,130 @@
+Colección,Campos,Documento de ejemplo (JSON),Patrones que la justifican
+pacientes,"_id, nombre_completo, fecha_nacimiento, tipo_sangre, alergias [ ], antecedentes { personales [ descripcion, desde ], heredofamiliares [ ] }, padecimientos [ codigo, nombre ], familiares [ paciente_id, parentesco ], expedientes_externos [ archivo_id, tipo, origen, fecha_recepcion ], fecha_registro","{
+  ""_id"": {
+    ""$oid"": ""6714a1f0c3b2a10001a0b001""
+  },
+  ""nombre_completo"": ""María Fernanda López Cruz"",
+  ""fecha_nacimiento"": {
+    ""$date"": ""1988-03-14T00:00:00Z""
+  },
+  ""tipo_sangre"": ""O+"",
+  ""alergias"": [
+    ""Penicilina"",
+    ""Sulfas""
+  ],
+  ""antecedentes"": {
+    ""personales"": [
+      {
+        ""descripcion"": ""Hipertensión arterial"",
+        ""desde"": ""2019""
+      },
+      {
+        ""descripcion"": ""Colecistectomía"",
+        ""desde"": ""2021""
+      }
+    ],
+    ""heredofamiliares"": [
+      ""Madre con diabetes tipo 2"",
+      ""Padre con hipertensión""
+    ]
+  },
+  ""padecimientos"": [
+    {
+      ""codigo"": ""OBE-3"",
+      ""nombre"": ""Obesidad grado III""
+    },
+    {
+      ""codigo"": ""HTA"",
+      ""nombre"": ""Hipertensión arterial""
+    }
+  ],
+  ""familiares"": [
+    {
+      ""paciente_id"": {
+        ""$oid"": ""6714a1f0c3b2a10001a0b002""
+      },
+      ""parentesco"": ""Madre""
+    }
+  ],
+  ""expedientes_externos"": [
+    {
+      ""archivo_id"": {
+        ""$oid"": ""6714a2b5c3b2a10001a0f001""
+      },
+      ""tipo"": ""Estudios de laboratorio"",
+      ""origen"": ""Hospital General de Tuxtla"",
+      ""fecha_recepcion"": {
+        ""$date"": ""2026-09-02T00:00:00Z""
+      }
+    }
+  ],
+  ""fecha_registro"": {
+    ""$date"": ""2026-09-02T16:20:00Z""
+  }
+}","P1, P2, P4, P8, P9, P10, P11, P12"
+consultas,"_id, paciente_id, fecha, tipo, estudio, mediciones { peso_kg, altura_cm, porcentaje_grasa, pliegues_mm { }, circunferencias_cm { }, glucosa_mg_dl, presion { sistolica, diastolica } }, calculos { imc, indice_cintura_cadera }, notas, dieta { nombre, indicaciones }, medicamentos [ nombre, dosis, frecuencia, duracion ]","{
+  ""_id"": {
+    ""$oid"": ""6714a3c1c3b2a10001a0c010""
+  },
+  ""paciente_id"": {
+    ""$oid"": ""6714a1f0c3b2a10001a0b001""
+  },
+  ""fecha"": {
+    ""$date"": ""2026-10-14T17:05:00Z""
+  },
+  ""tipo"": ""seguimiento"",
+  ""estudio"": ""control_bariatrico"",
+  ""mediciones"": {
+    ""peso_kg"": 118.4,
+    ""altura_cm"": 165,
+    ""porcentaje_grasa"": 46.2,
+    ""pliegues_mm"": {
+      ""tricipital"": 38,
+      ""subescapular"": 42
+    },
+    ""circunferencias_cm"": {
+      ""cintura"": 121,
+      ""cadera"": 134
+    },
+    ""glucosa_mg_dl"": 132,
+    ""presion"": {
+      ""sistolica"": 138,
+      ""diastolica"": 88
+    }
+  },
+  ""calculos"": {
+    ""imc"": 43.49,
+    ""indice_cintura_cadera"": 0.9
+  },
+  ""notas"": ""Bajó 2.1 kg desde la consulta anterior. Refiere buena tolerancia a la dieta."",
+  ""dieta"": {
+    ""nombre"": ""Hipocalórica 1,400 kcal"",
+    ""indicaciones"": ""5 tiempos de comida; evitar azúcares simples; 2 L de agua al día""
+  },
+  ""medicamentos"": [
+    {
+      ""nombre"": ""Metformina"",
+      ""dosis"": ""850 mg"",
+      ""frecuencia"": ""cada 12 h"",
+      ""duracion"": ""30 días""
+    }
+  ]
+}","P3, P4, P5, P6, P7, P11"
+expedientes.files / expedientes.chunks (GridFS),"_id, filename, length, chunkSize, uploadDate, metadata { paciente_id, tipo, content_type } — el contenido binario va en expedientes.chunks","{
+  ""_id"": {
+    ""$oid"": ""6714a2b5c3b2a10001a0f001""
+  },
+  ""filename"": ""laboratorio_2026-08.pdf"",
+  ""length"": 2483120,
+  ""chunkSize"": 261120,
+  ""uploadDate"": {
+    ""$date"": ""2026-09-02T16:31:00Z""
+  },
+  ""metadata"": {
+    ""paciente_id"": {
+      ""$oid"": ""6714a1f0c3b2a10001a0b001""
+    },
+    ""tipo"": ""Estudios de laboratorio"",
+    ""content_type"": ""application/pdf""
+  }
+}","P2, P11"

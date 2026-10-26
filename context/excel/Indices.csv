@@ -1,0 +1,4 @@
+Colección,Campos,Único (sí/no),Patrón que lo exige
+consultas,"paciente_id: 1, fecha: -1 (Compuesto)",No,"P4, P6, P11 (P4 trae en cada visita las consultas de un paciente ya ordenadas por fecha; P6 obtiene las más recientes y se detiene sin leer todo el historial; P11 reúne el historial completo. Orden ESR: igualdad en paciente_id y orden en fecha)."
+pacientes,"nombre_completo: 1, fecha_nacimiento: 1 (Compuesto, collation es, strength 1)",No,"P4, P1, P9 (P4 localiza al paciente por nombre en cada visita; P1 detecta un posible registro duplicado antes de insertar; P9 busca al familiar. La collation ignora mayúsculas y acentos. No es único porque existen homónimos reales)."
+pacientes,padecimientos.codigo: 1 (Multikey),No,"P12 (Lista los pacientes de un padecimiento. Como padecimientos es un arreglo, cada código se indexa por separado. Es el índice más débil: la colección es pequeña, pero nunca se depura en 15 años)."
