@@ -15,3 +15,9 @@ Solicitudes relevantes hechas al asistente y su resultado.
 ---
 
 **Resultado (creación del KG):** KG v1.0.0 en `context/kg/` y skill `contexto-kg`. Ver la entrada del mismo día en `registro-cambios.md`.
+
+## 2026-10-30 — Adaptar el proyecto a la práctica MongoDB vs PostgreSQL JSONB
+
+**Prompt:** «Antes de avanzar finalicemos y dejemos listo la parte NoSQL, resolvamos lo faltante y los problemas ya que esta es la base, y sobre todo que cumpla con los requisitos y si estamos simulando un caso real, lo que hagamos debe tener un por qué, no solo para cumplir los requisitos.»
+
+**Resultado:** KG v1.2.0. Se cierran PC-08 (ADR-12), PC-02 (ADR-13), GAP-01 y GAP-02 (ADR-14); se agregan los reportes P13 y P14 y el índice IDX-05 (ver `registro-cambios.md`). El análisis completo de Q1 y Q2 está en el repositorio del experimento (`docs/decisiones.md`).

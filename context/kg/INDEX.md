@@ -1,7 +1,7 @@
 # Índice del grafo de conocimiento
 
 > Generado por `python3 context/kg/kg.py render` desde `graph.json`. No editar a mano.
-> Versión 1.1.0 · actualizado 2026-10-26 · 188 nodos · 382 aristas.
+> Versión 1.2.0 · actualizado 2026-10-30 · 194 nodos · 395 aristas.
 
 ## Precedencia de fuentes
 
@@ -52,7 +52,7 @@
 | CU-11 | Entregar expediente clínico (PDF) | PARCIAL | 8 |
 | CU-12 | Consultar pacientes por padecimiento | CONFIRMADO | 7 |
 
-## Patron (12)
+## Patron (14)
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
@@ -68,6 +68,8 @@
 | P10 | Consultar antecedentes de familiares | CONFIRMADO | 4 |
 | P11 | Entregar expediente al paciente | CONFIRMADO | 5 |
 | P12 | Listar pacientes por padecimiento | CONFIRMADO | 4 |
+| P13 | Reporte: frecuencia de glucosa en ayuno elevada por año y sexo | PROPUESTA | 1 |
+| P14 | Auditoría de captura: visitas cerradas con IMC más alto | PROPUESTA | 2 |
 
 ## Regla (14)
 
@@ -85,7 +87,7 @@
 | RN-10 | Cálculos consistentes con sus datos de origen | CONFIRMADO | 5 |
 | RN-11 | Retención mínima de 15 años | CONFIRMADO | 5 |
 | RN-12 | Inmutabilidad del historial | CONFIRMADO | 12 |
-| RN-13 | Prevención de duplicados por reintentos (idempotencia) | CONFIRMADO | 5 |
+| RN-13 | Prevención de duplicados por reintentos (idempotencia) | CONFIRMADO | 6 |
 | RN-14 | Autenticación y autorización por rol | PARCIAL | 13 |
 
 ## ReglaArquitectura (8)
@@ -120,11 +122,11 @@
 | ID | Título | Estado | Grado |
 |---|---|---|---|
 | COL-pacientes | pacientes | PROPUESTA | 17 |
-| COL-visitas | visitas (Excel: consultas) | PROPUESTA | 14 |
+| COL-visitas | visitas (Excel: consultas) | PROPUESTA | 18 |
 | COL-expedientes | expedientes.files / expedientes.chunks (GridFS) | PROPUESTA | 5 |
 | COL-catalogo-padecimientos | catálogo de padecimientos | PROPUESTA | 5 |
 
-## Indice (5)
+## Indice (6)
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
@@ -133,6 +135,7 @@
 | IDX-02-OLD | pacientes { nombre_completo: 1, fecha_nacimiento: 1 } collation es strength 1 | SUPERADO | 3 |
 | IDX-03 | pacientes { padecimientos.codigo: 1 } (multikey) | PENDIENTE | 3 |
 | IDX-04 | visitas { paciente_id: 1 } único parcial { tipo: 'inicial' } | PENDIENTE | 5 |
+| IDX-05 | visitas { fecha: 1 } | PROPUESTA | 2 |
 
 ## Entidad (11)
 
@@ -140,8 +143,8 @@
 |---|---|---|---|
 | ENT-Paciente | Paciente | CONFIRMADO | 11 |
 | ENT-Antecedentes | Antecedentes y alergias | CONFIRMADO | 3 |
-| ENT-Visita | Visita | CONFIRMADO | 7 |
-| ENT-Estudio | Estudio | CONFIRMADO | 7 |
+| ENT-Visita | Visita | CONFIRMADO | 8 |
+| ENT-Estudio | Estudio | CONFIRMADO | 8 |
 | ENT-Medicion | Medición | CONFIRMADO | 17 |
 | ENT-ResultadoCalculado | Resultado calculado | CONFIRMADO | 4 |
 | ENT-Dieta | Dieta indicada | CONFIRMADO | 3 |
@@ -208,7 +211,7 @@
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
-| ATTR-SEXO | Sexo del paciente | ABIERTO | 6 |
+| ATTR-SEXO | Sexo del paciente | CONFIRMADO | 7 |
 
 ## Calculo (21)
 
@@ -242,7 +245,7 @@
 |---|---|---|---|
 | CALC-REQS | Ficha obligatoria antes de programar una fórmula | CONFIRMADO | 2 |
 
-## ADR (11)
+## ADR (14)
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
@@ -257,23 +260,26 @@
 | ADR-09 | Historial resumido y detalle bajo demanda | PROPUESTA | 1 |
 | ADR-10 | Conservar información clínica ≥ 15 años | CONFIRMADO | 1 |
 | ADR-11 | Evitar duplicados con identidad estable e idempotencia | CONFIRMADO | 1 |
+| ADR-12 | Visita con estudios[] embebidos y mediciones tipadas | CONFIRMADO | 3 |
+| ADR-13 | Ciclo de vida de la visita: estado abierta/cerrada | CONFIRMADO | 3 |
+| ADR-14 | _id de la visita: UUID generado por el cliente | CONFIRMADO | 2 |
 
 ## Pendiente (12)
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
 | PC-01 | Fórmulas clínicas | POR_VALIDAR | 5 |
-| PC-02 | Ciclo de vida de visitas y estudios | PENDIENTE | 6 |
+| PC-02 | Ciclo de vida de visitas y estudios | CONFIRMADO | 7 |
 | PC-03 | PDF externos: tamaño máximo y metadatos | PARCIAL | 3 |
 | PC-04 | Contenido del expediente de entrega | PARCIAL | 1 |
 | PC-05 | Alcance de familiares | CONFIRMADO | 3 |
 | PC-06 | Administración del catálogo de padecimientos | PARCIAL | 3 |
 | PC-07 | Tecnología backend | PENDIENTE | 1 |
-| PC-08 | Modelo físico de visitas/estudios | PENDIENTE | 4 |
+| PC-08 | Modelo físico de visitas/estudios | CONFIRMADO | 5 |
 | PC-09 | Matriz de roles y permisos | PENDIENTE | 2 |
 | PC-10 | Correcciones posteriores | PENDIENTE | 3 |
 | PC-11 | Retención: evento de inicio y respaldo | PENDIENTE | 1 |
-| PC-12 | Catálogo de estudios y mediciones | PENDIENTE | 4 |
+| PC-12 | Catálogo de estudios y mediciones | PARCIAL | 4 |
 
 ## Conflicto (9)
 
@@ -281,7 +287,7 @@
 |---|---|---|---|
 | CF-01 | nombre_completo (Excel) vs nombre y apellidos separados | RESUELTO | 4 |
 | CF-02 | Campo 'estudio' único en consultas vs varios estudios por visita | RESUELTO | 4 |
-| CF-03 | Editar 'la consulta del día' con $set vs inmutabilidad | RESUELTO | 9 |
+| CF-03 | Editar 'la consulta del día' con $set vs inmutabilidad | RESUELTO | 10 |
 | CF-04 | P5 seguimiento = $set de notas (Excel) vs nueva visita (CU-05) | RESUELTO | 3 |
 | CF-05 | Momento del cálculo: al guardar mediciones (Excel) vs al consultar (CU-06) | RESUELTO | 5 |
 | CF-06 | Correcciones posteriores registradas en notas (Excel) vs procedimiento pendiente | RESUELTO | 3 |
@@ -293,8 +299,8 @@
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
-| GAP-01 | El modelo de Paciente no incluye 'sexo' | ABIERTO | 4 |
-| GAP-02 | Clave de idempotencia de visitas sin definir | ABIERTO | 4 |
+| GAP-01 | El modelo de Paciente no incluye 'sexo' | RESUELTO | 5 |
+| GAP-02 | Clave de idempotencia de visitas sin definir | RESUELTO | 5 |
 | GAP-03 | KB§4 cita 'casos_de_uso.md' pero el archivo es 'casos-de-uso.md' | ABIERTO | 1 |
 | GAP-04 | Entradas exactas del GEB (¿edad?) no documentadas | ABIERTO | 1 |
 
