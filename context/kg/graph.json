@@ -1,0 +1,4103 @@
+{
+  "meta": {
+    "nombre": "KG Bariatría",
+    "version": "1.2.0",
+    "actualizado": "2026-10-30",
+    "descripcion": "Grafo de conocimiento del proyecto: única puerta de entrada al contexto. Cada nodo lleva su estado de conocimiento y su procedencia (src).",
+    "fuentes": {
+      "KB": "context/base_conocimiento_grafo_proyecto_bariatria.md (v1.0, 2026-10-26)",
+      "CU": "context/casos-de-uso.md",
+      "XP": "context/excel/Patrones.csv",
+      "XR": "context/excel/Relaciones.csv",
+      "XC": "context/excel/Colecciones.csv",
+      "XI": "context/excel/Indices.csv",
+      "XN": "context/excel/Integridad.csv",
+      "XV": "context/excel/Validacion.csv"
+    },
+    "precedencia": [
+      "1. Decisiones registradas en context/registro-cambios.md posteriores a esta versión.",
+      "2. KB: fuente principal (CONFIRMADO por el equipo, 2026-10-26).",
+      "3. CU: casos de uso ya analizados; resuelven los problemas detectados en el Excel.",
+      "4. Análisis del Excel (XP, XR, XC, XI, XN, XV): insumo previo. Ante contradicción con KB/CU prevalecen KB/CU; el Excel solo aporta detalle donde KB/CU no se pronuncian."
+    ],
+    "estados": {
+      "CONFIRMADO": "Decisión expresamente acordada.",
+      "DERIVADO": "Consecuencia necesaria de una decisión confirmada.",
+      "PROPUESTA": "Diseño técnico recomendado; revisable con razón documentada.",
+      "PARCIAL": "Parcialmente confirmado; el resto sigue pendiente.",
+      "PENDIENTE": "Requiere decisión o información adicional.",
+      "POR_VALIDAR": "Dato o fórmula del Excel que el médico debe confirmar.",
+      "SUPERADO": "Reemplazado por una decisión posterior; solo histórico.",
+      "ABIERTO": "Conflicto o vacío sin resolver.",
+      "RESUELTO": "Conflicto resuelto por una decisión confirmada."
+    },
+    "relaciones": {
+      "ejecuta": "Actor → caso de uso",
+      "realiza": "Caso de uso → patrón de acceso",
+      "aplica": "Caso de uso → regla de negocio/arquitectura que debe cumplir",
+      "en_modulo": "Caso de uso → módulo que lo implementa",
+      "lee": "Patrón → colección leída",
+      "escribe": "Patrón → colección escrita",
+      "usa_indice": "Patrón → índice",
+      "indexa": "Índice → colección",
+      "almacena": "Colección → entidad persistida",
+      "contiene": "Entidad → entidad embebida/compuesta",
+      "referencia": "Entidad → entidad referenciada por id",
+      "decide": "Decisión de modelado → entidad que modela",
+      "requiere": "Cálculo → medición/atributo/cálculo de entrada",
+      "usado_en": "Cálculo → caso de uso",
+      "afecta": "Pendiente/conflicto/vacío → nodo afectado",
+      "resuelto_por": "Conflicto → decisión que lo resuelve o pendiente que lo resolverá",
+      "sustituye": "Nodo vigente → nodo superado",
+      "justifica": "ADR → nodo que justifica",
+      "verifica": "Criterio de aceptación → regla verificada",
+      "depende_de": "Módulo → módulo/infraestructura",
+      "responsable_de": "Módulo → entidad/colección/cálculo",
+      "limita": "Fuera de alcance/restricción → nodo limitado",
+      "protege": "Requisito de seguridad → nodo protegido",
+      "es_un": "Instancia → entidad genérica (p. ej. M-PESO → ENT-Medicion)"
+    }
+  },
+  "nodes": [
+    {
+      "id": "PROY",
+      "type": "Proyecto",
+      "title": "Sistema de gestión clínica bariátrica",
+      "status": "CONFIRMADO",
+      "src": "KB§2.1",
+      "proposito": "Gestionar la información clínica de pacientes de un consultorio de bariatría: pacientes, visitas, estudios, mediciones, cálculos, dietas, medicamentos, padecimientos, relaciones familiares, documentos externos y expediente de entrega."
+    },
+    {
+      "id": "ACT-MED",
+      "type": "Actor",
+      "title": "Médico",
+      "status": "CONFIRMADO",
+      "src": "KB§2.2",
+      "descripcion": "Registra pacientes, información clínica, padecimientos, seguimientos, dietas y medicamentos; consulta historiales y antecedentes heredofamiliares; solicita el expediente."
+    },
+    {
+      "id": "ACT-AYU",
+      "type": "Actor",
+      "title": "Ayudante médico",
+      "status": "CONFIRMADO",
+      "src": "KB§2.2; XP P3",
+      "descripcion": "Registra las mediciones clínicas indicadas por el médico."
+    },
+    {
+      "id": "ACT-PAC",
+      "type": "Actor",
+      "title": "Paciente (destinatario del expediente)",
+      "status": "CONFIRMADO",
+      "src": "KB§2.2",
+      "descripcion": "Recibe el expediente generado. NO está confirmado que tenga cuenta o acceso al sistema (ver OOS-01)."
+    },
+    {
+      "id": "CU-01",
+      "type": "CasoDeUso",
+      "title": "Registrar paciente",
+      "status": "CONFIRMADO",
+      "src": "CU CU-01; KB§4",
+      "objetivo": "Registrar a un paciente nuevo para iniciar su expediente.",
+      "precondiciones": [
+        "Médico autenticado",
+        "El paciente no existe según la búsqueda de coincidencias"
+      ],
+      "flujo": [
+        "Captura nombre, apellido_paterno, apellido_materno, fecha_nacimiento y demás datos requeridos definidos",
+        "Validar campos y formatos",
+        "Buscar posibles coincidencias (duplicados)",
+        "Médico confirma",
+        "Crear expediente y guardar fecha_registro"
+      ],
+      "alternativos": [
+        "Datos obligatorios faltantes o inválidos → informar y pedir corrección",
+        "Coincidencias → mostrarlas para que el médico verifique"
+      ],
+      "postcondiciones": [
+        "Paciente con identificador único",
+        "Expediente disponible para visitas e historial"
+      ],
+      "resultado": "Paciente registrado con identificador único"
+    },
+    {
+      "id": "CU-02",
+      "type": "CasoDeUso",
+      "title": "Adjuntar expediente externo",
+      "status": "CONFIRMADO",
+      "src": "CU CU-02; KB§4",
+      "objetivo": "Asociar un documento clínico externo (PDF) al expediente del paciente.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Paciente registrado",
+        "Archivo en PDF"
+      ],
+      "flujo": [
+        "Seleccionar paciente",
+        "Seleccionar archivo PDF",
+        "Validar formato",
+        "Almacenar archivo",
+        "Registrar metadatos y vincular al paciente",
+        "Confirmar"
+      ],
+      "alternativos": [
+        "No es PDF → rechazar",
+        "Error al guardar archivo o metadatos → informar y permitir recuperación sin referencias inválidas"
+      ],
+      "postcondiciones": [
+        "PDF almacenado y vinculado",
+        "Recuperable para consulta o entrega"
+      ],
+      "restricciones": [
+        "Tamaño máximo pendiente (PC-03)"
+      ]
+    },
+    {
+      "id": "CU-03",
+      "type": "CasoDeUso",
+      "title": "Registrar mediciones clínicas",
+      "status": "CONFIRMADO",
+      "src": "CU CU-03; KB§4",
+      "objetivo": "Registrar las mediciones de un paciente durante una visita.",
+      "precondiciones": [
+        "Ayudante autenticado",
+        "Paciente registrado",
+        "No existe una visita equivalente para la misma operación"
+      ],
+      "flujo": [
+        "Seleccionar paciente",
+        "Mostrar datos de identificación",
+        "Iniciar visita",
+        "Registrar uno o varios estudios de distintos tipos",
+        "Capturar mediciones por estudio",
+        "Validar campos, tipos y rangos configurados",
+        "Guardar visita, estudios y mediciones",
+        "Confirmar"
+      ],
+      "alternativos": [
+        "Faltantes o inválidos → informar antes de guardar",
+        "Reintento ya procesado → no duplicar",
+        "Visita/estudios ya guardados → no se permite modificarlos"
+      ],
+      "postcondiciones": [
+        "Visita y estudios vinculados al paciente",
+        "Mediciones disponibles para cálculos e historial"
+      ],
+      "restricciones": [
+        "Una visita puede incluir varios estudios de distintos tipos",
+        "Visitas y estudios anteriores inmutables",
+        "Los cálculos se guardan asociados a la visita y a sus datos de origen"
+      ]
+    },
+    {
+      "id": "CU-04",
+      "type": "CasoDeUso",
+      "title": "Consultar historial clínico",
+      "status": "CONFIRMADO",
+      "src": "CU CU-04; KB§4, §7.2",
+      "objetivo": "Consultar la evolución clínica del paciente a partir de sus visitas.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Paciente registrado"
+      ],
+      "flujo": [
+        "Buscar paciente por datos de identificación",
+        "Mostrar coincidencias",
+        "Seleccionar paciente",
+        "Resumen cronológico (fechas, peso e IMC cuando existan)",
+        "Detalle de las 3 visitas más recientes",
+        "Detalle de visitas anteriores bajo demanda"
+      ],
+      "alternativos": [
+        "Sin coincidencias → informarlo",
+        "Sin visitas → expediente sin historial",
+        "Datos insuficientes para una métrica → omitirla sin inventar valores"
+      ],
+      "postcondiciones": [
+        "Consulta sin modificar información histórica"
+      ]
+    },
+    {
+      "id": "CU-05",
+      "type": "CasoDeUso",
+      "title": "Registrar seguimiento clínico",
+      "status": "CONFIRMADO",
+      "src": "CU CU-05; KB§4",
+      "objetivo": "Registrar información de seguimiento mediante una NUEVA visita.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Paciente registrado",
+        "Visita previa si el seguimiento requiere antecedentes"
+      ],
+      "flujo": [
+        "Seleccionar paciente",
+        "Mostrar información clínica",
+        "Iniciar nueva visita de seguimiento",
+        "Registrar información y estudios",
+        "Validar",
+        "Guardar nueva visita y estudios",
+        "Confirmar"
+      ],
+      "alternativos": [
+        "Faltantes o inválidos → informar",
+        "Reintento tras completarse → no duplicar",
+        "Intento de modificar visita anterior → rechazar"
+      ],
+      "postcondiciones": [
+        "Seguimiento registrado como nueva visita",
+        "Datos anteriores sin modificaciones"
+      ]
+    },
+    {
+      "id": "CU-06",
+      "type": "CasoDeUso",
+      "title": "Consultar cálculos antropométricos y calóricos",
+      "status": "CONFIRMADO",
+      "src": "CU CU-06; KB§4, §8",
+      "objetivo": "Consultar resultados de cálculos clínicos obtenidos de mediciones y datos del paciente.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Visita con datos suficientes"
+      ],
+      "flujo": [
+        "Seleccionar paciente y visita",
+        "Recuperar mediciones y datos",
+        "Identificar cálculos posibles con la información disponible",
+        "Calcular con fórmulas aprobadas",
+        "Guardar resultados ligados a la visita y mediciones usadas",
+        "Presentar"
+      ],
+      "alternativos": [
+        "Faltan datos → indicar cuáles; no guardar resultados incompletos como válidos",
+        "Fórmula no evaluable → cálculo no disponible",
+        "Visita anterior → mostrar resultados históricos sin modificar"
+      ],
+      "postcondiciones": [
+        "Resultados vinculados a la visita",
+        "Datos históricos sin modificaciones"
+      ],
+      "alcance": "Fórmulas del Excel del consultorio una vez validadas por el médico: IMC, peso ideal, composición corporal, GEB y GET."
+    },
+    {
+      "id": "CU-07",
+      "type": "CasoDeUso",
+      "title": "Registrar dieta y medicamentos",
+      "status": "CONFIRMADO",
+      "src": "CU CU-07; KB§4",
+      "objetivo": "Registrar dieta y medicamentos indicados durante la atención.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Paciente registrado",
+        "Existe la visita a asociar"
+      ],
+      "flujo": [
+        "Seleccionar paciente",
+        "Seleccionar visita",
+        "Presentar visita",
+        "Capturar dieta y medicamentos",
+        "Validar",
+        "Guardar en los campos autorizados de la visita",
+        "Confirmar"
+      ],
+      "alternativos": [
+        "No pasa validaciones → informar",
+        "Intento de modificar visita anterior → rechazar"
+      ],
+      "postcondiciones": [
+        "Dieta y medicamentos asociados a la visita",
+        "Se conservan como historial"
+      ],
+      "restricciones": [
+        "Actualización parcial solo de campos autorizados; nunca sustituir el documento completo de la visita"
+      ]
+    },
+    {
+      "id": "CU-08",
+      "type": "CasoDeUso",
+      "title": "Clasificar paciente por padecimiento",
+      "status": "CONFIRMADO",
+      "src": "CU CU-08; KB§4",
+      "objetivo": "Asociar al paciente los padecimientos identificados clínicamente.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Paciente registrado",
+        "Padecimientos del catálogo definido por el médico"
+      ],
+      "flujo": [
+        "Seleccionar paciente",
+        "Mostrar padecimientos actuales",
+        "Seleccionar padecimientos",
+        "Validar pertenencia al catálogo y no duplicidad",
+        "Confirmar",
+        "Guardar"
+      ],
+      "alternativos": [
+        "Fuera de catálogo → rechazar",
+        "Ya asociado → no duplicar"
+      ],
+      "postcondiciones": [
+        "Padecimientos asociados",
+        "Disponibles para CU-12"
+      ]
+    },
+    {
+      "id": "CU-09",
+      "type": "CasoDeUso",
+      "title": "Vincular pacientes familiares",
+      "status": "CONFIRMADO",
+      "src": "CU CU-09; KB§4",
+      "objetivo": "Registrar relaciones familiares entre pacientes para antecedentes heredofamiliares.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Ambos pacientes registrados"
+      ],
+      "flujo": [
+        "Seleccionar paciente principal",
+        "Elegir vincular familiar",
+        "Seleccionar otro paciente",
+        "Especificar parentesco",
+        "Validar existencia y relación válida",
+        "Registrar en ambos expedientes con correspondencia",
+        "Confirmar"
+      ],
+      "alternativos": [
+        "Paciente inexistente → no se establece",
+        "Relación existente → no duplicar",
+        "Falla un vínculo → revertir toda la operación"
+      ],
+      "postcondiciones": [
+        "Relación consistente en ambos pacientes"
+      ],
+      "restricciones": [
+        "El vínculo NO autoriza consultar el expediente completo del familiar"
+      ]
+    },
+    {
+      "id": "CU-10",
+      "type": "CasoDeUso",
+      "title": "Consultar antecedentes heredofamiliares",
+      "status": "CONFIRMADO",
+      "src": "CU CU-10; KB§4",
+      "objetivo": "Consultar los antecedentes heredofamiliares del paciente.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Paciente registrado",
+        "Existen antecedentes o relaciones registradas"
+      ],
+      "flujo": [
+        "Seleccionar paciente",
+        "Recuperar antecedentes heredofamiliares",
+        "Identificar familiares vinculados y sus datos heredofamiliares",
+        "Presentar"
+      ],
+      "alternativos": [
+        "Sin antecedentes → informar",
+        "Sin familiares vinculados → informarlo"
+      ],
+      "postcondiciones": [
+        "Consulta sin modificar registros"
+      ],
+      "restricciones": [
+        "Solo antecedentes heredofamiliares; nunca visitas, mediciones, dietas, medicamentos ni expediente completo del familiar"
+      ]
+    },
+    {
+      "id": "CU-11",
+      "type": "CasoDeUso",
+      "title": "Entregar expediente clínico (PDF)",
+      "status": "PARCIAL",
+      "src": "CU CU-11; KB§4",
+      "objetivo": "Generar el expediente clínico en PDF para entregarlo al paciente.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Paciente registrado",
+        "Existe información clínica"
+      ],
+      "flujo": [
+        "Seleccionar paciente",
+        "Solicitar generación",
+        "Recuperar información clínica",
+        "Preparar documento con información y documentos del alcance autorizado",
+        "Generar PDF",
+        "Presentar al médico"
+      ],
+      "alternativos": [
+        "Información insuficiente → informar",
+        "Error al generar PDF → informar"
+      ],
+      "postcondiciones": [
+        "PDF generado",
+        "No modifica información clínica (solo lectura)"
+      ],
+      "pendiente": "Contenido exacto e inclusión de documentos externos (PC-04)."
+    },
+    {
+      "id": "CU-12",
+      "type": "CasoDeUso",
+      "title": "Consultar pacientes por padecimiento",
+      "status": "CONFIRMADO",
+      "src": "CU CU-12; KB§4",
+      "objetivo": "Listar pacientes asociados a uno o varios padecimientos.",
+      "precondiciones": [
+        "Médico autenticado",
+        "Pacientes y catálogo existentes"
+      ],
+      "flujo": [
+        "Elegir consulta por padecimiento",
+        "Mostrar catálogo",
+        "Seleccionar padecimiento",
+        "Buscar pacientes asociados",
+        "Presentar listado"
+      ],
+      "alternativos": [
+        "Sin resultados → informar",
+        "Padecimiento fuera de catálogo → pedir uno válido"
+      ],
+      "postcondiciones": [
+        "Listado obtenido sin modificar expedientes"
+      ],
+      "datos_resultado": "Nombre, fecha de nacimiento y padecimientos (XP P12)"
+    },
+    {
+      "id": "P1",
+      "type": "Patron",
+      "title": "Registrar paciente nuevo",
+      "status": "CONFIRMADO",
+      "src": "XP P1; XV P1",
+      "usuario": "Médico",
+      "tipo": "Escritura",
+      "frecuencia": "Media",
+      "datos": "Nombre, edad, fecha de nacimiento, tipo de sangre, antecedentes, alergias",
+      "costo": "1 L + 1 E",
+      "tolera": true,
+      "condicion": "La búsqueda de duplicados debe usar la MISMA collation que IDX-02 (es, strength 1); sin ella MongoDB no usa el índice. Un error de dedo ('Lopes') no se detecta: se tolera porque el médico confirma."
+    },
+    {
+      "id": "P2",
+      "type": "Patron",
+      "title": "Registrar expediente/antecedentes externos",
+      "status": "CONFIRMADO",
+      "src": "XP P2; XV P2",
+      "usuario": "Médico",
+      "tipo": "Escritura",
+      "frecuencia": "Baja",
+      "datos": "Expediente o antecedentes previos (PDF confirmado)",
+      "costo": "2 E + n E (trozos GridFS de 255 KB)",
+      "tolera": true
+    },
+    {
+      "id": "P3",
+      "type": "Patron",
+      "title": "Registrar mediciones",
+      "status": "CONFIRMADO",
+      "src": "XP P3; XV P3",
+      "usuario": "Ayudante (según indica el médico)",
+      "tipo": "Escritura",
+      "frecuencia": "Alta",
+      "datos": "Peso (báscula), altura, % grasa, pliegues (pinza), circunferencias (cinta), glucosa, presión",
+      "costo": "2 L + 1 E",
+      "tolera": true,
+      "condicion": "Lecturas: paciente por _id (RN-05) y visita inicial (IDX-04, si se conserva RN-04). El modelo del Excel en que P5 y P7 actualizan la visita creada en P3 está superado (CF-03, CF-04)."
+    },
+    {
+      "id": "P4",
+      "type": "Patron",
+      "title": "Consultar historial completo",
+      "status": "CONFIRMADO",
+      "src": "XP P4; XV P4",
+      "usuario": "Médico",
+      "tipo": "Lectura",
+      "frecuencia": "Alta (cada visita)",
+      "costo": "2 L (la segunda sin tope en el diseño original)",
+      "tolera": false,
+      "ajuste": "1) Separar nombre/apellidos e indexar {apellido_paterno, apellido_materno, nombre, fecha_nacimiento} con collation (IDX-02). 2) Proyectar de todas las visitas solo fecha, peso e IMC (~45 KB vs ~0.8 MB a 15 años) y traer detalle completo solo de las 3 últimas. Descartado: copiar un resumen en el paciente."
+    },
+    {
+      "id": "P5",
+      "type": "Patron",
+      "title": "Registrar seguimiento",
+      "status": "CONFIRMADO",
+      "src": "XP P5; XV P5",
+      "usuario": "Médico",
+      "tipo": "Escritura",
+      "frecuencia": "Alta (semanal, mensual o anual por paciente)",
+      "costo": "1 E (+1 L si la visita del día no está cargada)",
+      "tolera": true,
+      "nota": "El Excel lo modela como $set de notas sobre la visita del día; CU-05 lo define como NUEVA visita (CF-04)."
+    },
+    {
+      "id": "P6",
+      "type": "Patron",
+      "title": "Realizar cálculos",
+      "status": "CONFIRMADO",
+      "src": "XP P6; XV P6",
+      "usuario": "Médico",
+      "tipo": "Lectura",
+      "frecuencia": "Alta (supuesto)",
+      "costo": "2 L",
+      "tolera": true,
+      "condicion": "Últimas visitas por IDX-01 y línea base por IDX-04. Si los cálculos del Excel requieren todo el historial, usar la proyección ligera de P4."
+    },
+    {
+      "id": "P7",
+      "type": "Patron",
+      "title": "Registrar dietas y medicamentos",
+      "status": "CONFIRMADO",
+      "src": "XP P7; XV P7",
+      "usuario": "Médico",
+      "tipo": "Escritura",
+      "frecuencia": "Alta (supuesto)",
+      "costo": "1 E (+1 L)",
+      "tolera": true,
+      "nota": "$set de dieta y medicamentos sobre la visita; se guardan como copia (hecho histórico)."
+    },
+    {
+      "id": "P8",
+      "type": "Patron",
+      "title": "Clasificar paciente por padecimiento",
+      "status": "CONFIRMADO",
+      "src": "XP P8; XV P8",
+      "usuario": "Médico",
+      "tipo": "Escritura",
+      "frecuencia": "Media",
+      "costo": "0 E adicionales (en el insert de P1); reclasificación = 1 E con $addToSet",
+      "tolera": true
+    },
+    {
+      "id": "P9",
+      "type": "Patron",
+      "title": "Conectar paciente con familiares",
+      "status": "CONFIRMADO",
+      "src": "XP P9; XV P9",
+      "usuario": "Médico",
+      "tipo": "Escritura",
+      "frecuencia": "Baja (supuesto)",
+      "costo": "1 L + 2 E",
+      "tolera": true,
+      "condicion": "La transacción (RN-06) exige MongoDB en replica set (puede ser de un nodo) o Atlas. Descartado: parentesco de un solo lado (requeriría índice inverso)."
+    },
+    {
+      "id": "P10",
+      "type": "Patron",
+      "title": "Consultar antecedentes de familiares",
+      "status": "CONFIRMADO",
+      "src": "XP P10; XV P10",
+      "usuario": "Médico",
+      "tipo": "Lectura",
+      "frecuencia": "Baja (supuesto)",
+      "costo": "2 L (paciente + familiares con $in sobre _id)",
+      "tolera": true,
+      "nota": "Leer visitas de familiares está EXCLUIDO (PC-05, CF-08)."
+    },
+    {
+      "id": "P11",
+      "type": "Patron",
+      "title": "Entregar expediente al paciente",
+      "status": "CONFIRMADO",
+      "src": "XP P11; XV P11",
+      "usuario": "Médico",
+      "tipo": "Lectura",
+      "frecuencia": "Baja",
+      "costo": "2 L + n L (paciente, todas sus visitas por IDX-01 y un archivo GridFS por documento)",
+      "tolera": true,
+      "nota": "Se arma bajo demanda."
+    },
+    {
+      "id": "P12",
+      "type": "Patron",
+      "title": "Listar pacientes por padecimiento",
+      "status": "CONFIRMADO",
+      "src": "XP P12; XV P12",
+      "usuario": "Médico",
+      "tipo": "Lectura",
+      "frecuencia": "Media (supuesto)",
+      "costo": "1 L (recorrido de colección, sin índice)",
+      "tolera": true,
+      "nota": "~2 MB con 2,000 pacientes; ~10 MB con 10,000. Crear IDX-03 solo si la clínica crece mucho más."
+    },
+    {
+      "id": "RN-01",
+      "type": "Regla",
+      "title": "Campos obligatorios y tipos",
+      "status": "PARCIAL",
+      "src": "KB§5 RN-01; XN RN-01",
+      "regla": "Validar requeridos, tipos y formatos. 'alergias' es obligatorio: lista vacía = sin alergias conocidas; ausente = no se preguntó/desconocido.",
+      "garante": "Motor + aplicación",
+      "mecanismo": "$jsonSchema (required + bsonType), validationLevel 'strict', validationAction 'error'; validación de aplicación para reglas con contexto.",
+      "pendiente": "Esquema definitivo por colección. La lista de requeridos del Excel usa nombre_completo y estudio único (superados: CF-01, CF-02)."
+    },
+    {
+      "id": "RN-02",
+      "type": "Regla",
+      "title": "Valores permitidos",
+      "status": "PARCIAL",
+      "src": "KB§5 RN-02; XN RN-02",
+      "regla": "tipo_sangre ∈ {A+, A-, B+, B-, AB+, AB-, O+, O-}. tipo de visita ∈ {inicial, seguimiento} si se conserva la distinción. Vocabulario de tipos de estudio por definir (PC-12).",
+      "garante": "Motor",
+      "mecanismo": "enum en $jsonSchema (solo para listas fijas)."
+    },
+    {
+      "id": "RN-03",
+      "type": "Regla",
+      "title": "Rangos de mediciones",
+      "status": "POR_VALIDAR",
+      "src": "KB§5 RN-03; XN RN-03",
+      "regla": "Ejemplos técnicos: peso 20–400 kg, estatura 50–250 cm, sistólica 50–300. NO son rangos clínicos aprobados; no inventar rangos para otros campos.",
+      "garante": "Motor",
+      "mecanismo": "minimum/maximum en $jsonSchema de las mediciones. Detecta errores de captura (1184 en vez de 118.4)."
+    },
+    {
+      "id": "RN-04",
+      "type": "Regla",
+      "title": "Una sola visita inicial por paciente",
+      "status": "PENDIENTE",
+      "src": "KB§5 RN-04; XN RN-04",
+      "regla": "Si se conserva el concepto de visita inicial, impedir más de una por paciente (es la línea base del % de peso perdido).",
+      "garante": "Motor",
+      "mecanismo": "Índice único parcial IDX-04.",
+      "condicion": "Debe ser compatible con la identidad estable de la visita y con la idempotencia (RN-13)."
+    },
+    {
+      "id": "RN-05",
+      "type": "Regla",
+      "title": "Toda visita pertenece a un paciente existente",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-05; XN RN-05",
+      "regla": "No puede haber visitas cuyo paciente_id no apunte a un paciente.",
+      "garante": "Aplicación",
+      "mecanismo": "findOne por _id antes de insertar. Como los pacientes no se borran (RN-11), la referencia no se rompe."
+    },
+    {
+      "id": "RN-06",
+      "type": "Regla",
+      "title": "Relaciones familiares bidireccionales y atómicas",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-06; XN RN-06",
+      "regla": "El parentesco se registra en ambos pacientes con inversos coherentes; si falla un lado, no queda relación parcial.",
+      "garante": "Aplicación",
+      "mecanismo": "session.withTransaction actualizando ambos pacientes con $addToSet y parentesco inverso (madre ↔ hija/hijo, padre ↔ hija/hijo, hermano ↔ hermano). Requiere replica set o Atlas.",
+      "nota": "Elegir hija/hijo requiere conocer el sexo del paciente (GAP-01)."
+    },
+    {
+      "id": "RN-07",
+      "type": "Regla",
+      "title": "Padecimientos del catálogo y sin duplicados",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-07; XN RN-07",
+      "regla": "Solo códigos del catálogo definido por el médico; un paciente no repite padecimiento.",
+      "garante": "Aplicación",
+      "mecanismo": "Validar código contra el catálogo; agregar con $addToSet. No usar enum en el esquema porque el catálogo crece.",
+      "pendiente": "Administración del catálogo (PC-06)."
+    },
+    {
+      "id": "RN-08",
+      "type": "Regla",
+      "title": "Expediente externo siempre con su archivo",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-08; XN RN-08",
+      "regla": "Solo PDF. Nunca un metadato activo apuntando a un archivo inexistente.",
+      "garante": "Aplicación",
+      "mecanismo": "Orden fijo: 1) subir a GridFS; 2) solo si terminó bien, agregar el metadato al paciente. Si falla el paso 2 queda un huérfano, detectable por metadata.paciente_id, que se vuelve a ligar.",
+      "pendiente": "Tamaño máximo y metadatos obligatorios (PC-03)."
+    },
+    {
+      "id": "RN-09",
+      "type": "Regla",
+      "title": "Escrituras autorizadas por responsabilidad",
+      "status": "PARCIAL",
+      "src": "KB§5 RN-09; XN RN-09",
+      "regla": "Cuando una operación permitida escribe sobre una visita existente (solo CU-07: dieta y medicamentos), actualizar únicamente los campos autorizados; prohibido replaceOne o reescribir el documento completo.",
+      "garante": "Aplicación",
+      "mecanismo": "updateOne + $set sobre los campos autorizados; el motor garantiza la atomicidad de cada $set.",
+      "superado": "Modelo del Excel en que ayudante y médico completan la misma 'consulta del día' con $set (CF-03).",
+      "advertencia": "No habilitar edición histórica. Momento en que la visita deja de aceptar CU-07: PC-02."
+    },
+    {
+      "id": "RN-10",
+      "type": "Regla",
+      "title": "Cálculos consistentes con sus datos de origen",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-10; XN RN-10",
+      "regla": "Cada resultado se vincula con la visita y el estudio que lo originan; no guardar como válido un resultado con datos faltantes; conservar procedencia de los datos usados.",
+      "garante": "Aplicación",
+      "mecanismo": "Según CU-06: identificar cálculos posibles con los datos disponibles, calcular con fórmulas aprobadas y persistir los resultados ligados a la visita y a las mediciones usadas; si faltan datos, indicar cuáles sin guardar resultados parciales como válidos.",
+      "superado": "Excel: calcular dentro de la misma escritura que registra las mediciones (CF-05).",
+      "pendiente": "Lista de cálculos y fórmulas por validar (PC-01)."
+    },
+    {
+      "id": "RN-11",
+      "type": "Regla",
+      "title": "Retención mínima de 15 años",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-11; XN RN-11; KB ADR-10",
+      "regla": "Pacientes, visitas y expedientes se conservan ≥ 15 años; no hay eliminación física ordinaria.",
+      "garante": "Motor",
+      "mecanismo": "Rol de BD de la aplicación con find, insert y update; sin remove ni drop.",
+      "pendiente": "Evento desde el que se cuentan los 15 años y política de respaldo (PC-11)."
+    },
+    {
+      "id": "RN-12",
+      "type": "Regla",
+      "title": "Inmutabilidad del historial",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-12; XN RN-12; CU-03; CU-05",
+      "regla": "Visitas y estudios anteriores no se corrigen ni modifican; nuevas atenciones = nuevas visitas. Sin replaceOne ni endpoints que sobrescriban historial.",
+      "garante": "Aplicación",
+      "mecanismo": "Depende del ciclo de vida de la visita (PC-02), que el esquema no puede expresar.",
+      "pendiente": "Cómo documentar una corrección posterior (PC-10). La propuesta del Excel de usar notas está descartada (CF-06)."
+    },
+    {
+      "id": "RN-13",
+      "type": "Regla",
+      "title": "Prevención de duplicados por reintentos (idempotencia)",
+      "status": "CONFIRMADO",
+      "src": "KB§5 RN-13; KB ADR-11",
+      "regla": "Cada creación de visita tiene identidad estable o clave de idempotencia; un reintento no crea otra visita ni estudios duplicados.",
+      "garante": "Motor + aplicación",
+      "mecanismo": "Restricción de unicidad en BD cuando sea posible; la comprobación previa por sí sola no protege contra concurrencia.",
+      "pendiente": "Resuelto por ADR-14 (_id UUID del cliente)."
+    },
+    {
+      "id": "RN-14",
+      "type": "Regla",
+      "title": "Autenticación y autorización por rol",
+      "status": "PARCIAL",
+      "src": "KB§5 RN-14",
+      "regla": "Autenticar; autorizar por rol y responsabilidad; validar permisos en el backend; impedir modificar campos ajenos a la función.",
+      "garante": "Aplicación",
+      "pendiente": "Matriz de roles y permisos (PC-09)."
+    },
+    {
+      "id": "AR-01",
+      "type": "ReglaArquitectura",
+      "title": "Controladores HTTP no consultan MongoDB directamente",
+      "status": "CONFIRMADO",
+      "src": "KB§9.4"
+    },
+    {
+      "id": "AR-02",
+      "type": "ReglaArquitectura",
+      "title": "Módulos no importan archivos internos de otros módulos",
+      "status": "CONFIRMADO",
+      "src": "KB§9.4"
+    },
+    {
+      "id": "AR-03",
+      "type": "ReglaArquitectura",
+      "title": "La lógica de cálculo no depende de HTTP ni MongoDB",
+      "status": "CONFIRMADO",
+      "src": "KB§9.4"
+    },
+    {
+      "id": "AR-04",
+      "type": "ReglaArquitectura",
+      "title": "Toda escritura pasa por servicios que aplican reglas de negocio",
+      "status": "CONFIRMADO",
+      "src": "KB§9.4"
+    },
+    {
+      "id": "AR-05",
+      "type": "ReglaArquitectura",
+      "title": "Sin dependencias circulares",
+      "status": "CONFIRMADO",
+      "src": "KB§9.4"
+    },
+    {
+      "id": "AR-06",
+      "type": "ReglaArquitectura",
+      "title": "No crear capas, interfaces o archivos vacíos sin necesidad concreta",
+      "status": "CONFIRMADO",
+      "src": "KB§9.4"
+    },
+    {
+      "id": "AR-07",
+      "type": "ReglaArquitectura",
+      "title": "Probar cada módulo de forma aislada cuando sea posible",
+      "status": "CONFIRMADO",
+      "src": "KB§9.4"
+    },
+    {
+      "id": "AR-08",
+      "type": "ReglaArquitectura",
+      "title": "Features acceden a MongoDB/GridFS solo a través de infrastructure",
+      "status": "CONFIRMADO",
+      "src": "CLAUDE.md; KB§9.3"
+    },
+    {
+      "id": "SEC-01",
+      "type": "Seguridad",
+      "title": "Mínimo privilegio en cuentas de BD (sin borrado físico ni drop)",
+      "status": "CONFIRMADO",
+      "src": "KB§10"
+    },
+    {
+      "id": "SEC-02",
+      "type": "Seguridad",
+      "title": "Validar entradas en API y BD",
+      "status": "CONFIRMADO",
+      "src": "KB§10"
+    },
+    {
+      "id": "SEC-03",
+      "type": "Seguridad",
+      "title": "Validar PDF por contenido, no solo por extensión",
+      "status": "CONFIRMADO",
+      "src": "KB§10"
+    },
+    {
+      "id": "SEC-04",
+      "type": "Seguridad",
+      "title": "Errores sin exponer credenciales, internos ni datos clínicos",
+      "status": "CONFIRMADO",
+      "src": "KB§10"
+    },
+    {
+      "id": "SEC-05",
+      "type": "Seguridad",
+      "title": "No registrar información clínica completa en logs",
+      "status": "CONFIRMADO",
+      "src": "KB§10"
+    },
+    {
+      "id": "SEC-06",
+      "type": "Seguridad",
+      "title": "Secretos en variables de entorno, nunca en el repositorio",
+      "status": "CONFIRMADO",
+      "src": "KB§10"
+    },
+    {
+      "id": "SEC-07",
+      "type": "Seguridad",
+      "title": "Generación del expediente solo para usuarios autorizados",
+      "status": "CONFIRMADO",
+      "src": "KB§10"
+    },
+    {
+      "id": "SEC-08",
+      "type": "Seguridad",
+      "title": "El vínculo familiar no da acceso al expediente del familiar",
+      "status": "CONFIRMADO",
+      "src": "KB§10; CU-09; CU-10"
+    },
+    {
+      "id": "SEC-09",
+      "type": "Seguridad",
+      "title": "Respaldo, DR, cifrado, auditoría y regulación por definir antes de producción",
+      "status": "PENDIENTE",
+      "src": "KB§10"
+    },
+    {
+      "id": "COL-pacientes",
+      "type": "Coleccion",
+      "title": "pacientes",
+      "status": "PROPUESTA",
+      "src": "KB§6.3; XC pacientes",
+      "contenido": "Identidad, antecedentes, alergias, padecimientos y referencias familiares/documentales.",
+      "campos_excel": "_id, nombre_completo, fecha_nacimiento, tipo_sangre, alergias[], antecedentes{personales[descripcion, desde], heredofamiliares[]}, padecimientos[codigo, nombre], familiares[paciente_id, parentesco], expedientes_externos[archivo_id, tipo, origen, fecha_recepcion], fecha_registro",
+      "ajuste_vigente": "nombre_completo → nombre, apellido_paterno, apellido_materno (ADR-03).",
+      "patrones": "P1, P2, P4, P8, P9, P10, P11, P12"
+    },
+    {
+      "id": "COL-visitas",
+      "type": "Coleccion",
+      "title": "visitas (Excel: consultas)",
+      "status": "PROPUESTA",
+      "src": "KB§6.3; XC consultas",
+      "contenido": "Visitas referenciadas por paciente_id, con estudios embebidos si tamaño y acceso lo justifican (PC-08).",
+      "campos_excel": "_id, paciente_id, fecha, tipo, estudio, mediciones{peso_kg, altura_cm, porcentaje_grasa, pliegues_mm{}, circunferencias_cm{}, glucosa_mg_dl, presion{sistolica, diastolica}}, calculos{imc, indice_cintura_cadera}, notas, dieta{nombre, indicaciones}, medicamentos[nombre, dosis, frecuencia, duracion]",
+      "ajuste_vigente": "'estudio' único → 'estudios[]' (cada uno con tipo_estudio, mediciones, resultados_calculados) por ADR-04. Nombre de colección: KB usa 'visitas', Excel 'consultas'.",
+      "restriccion": "No crear una colección por cada tipo de estudio sin justificación de acceso.",
+      "patrones": "P3, P4, P5, P6, P7, P11, P13, P14",
+      "campos_vigentes": "_id UUID, paciente_id, fecha, tipo, estado, cerrada_en, datos_paciente{sexo, edad_anios}, resumen{peso_kg, imc}, estudios[{tipo_estudio, mediciones{...}, resultados_calculados{...}}], notas, dieta{nombre, indicaciones}, medicamentos[{nombre, dosis, frecuencia, duracion}]"
+    },
+    {
+      "id": "COL-expedientes",
+      "type": "Coleccion",
+      "title": "expedientes.files / expedientes.chunks (GridFS)",
+      "status": "PROPUESTA",
+      "src": "KB§6.3; XC GridFS; KB ADR-07",
+      "campos_excel": "_id, filename, length, chunkSize, uploadDate, metadata{paciente_id, tipo, content_type='application/pdf'}; binario en expedientes.chunks",
+      "motivo": "Un escaneo puede rebasar 16 MB; el binario va fuera del documento del paciente.",
+      "patrones": "P2, P11"
+    },
+    {
+      "id": "COL-catalogo-padecimientos",
+      "type": "Coleccion",
+      "title": "catálogo de padecimientos",
+      "status": "PROPUESTA",
+      "src": "KB§6.3",
+      "contenido": "Puede ser colección independiente si requiere administración centralizada (PC-06)."
+    },
+    {
+      "id": "IDX-01",
+      "type": "Indice",
+      "title": "visitas { paciente_id: 1, fecha: -1 }",
+      "status": "PROPUESTA",
+      "src": "KB§7.1; XI consultas",
+      "unico": false,
+      "motivo": "Historial ordenado del más reciente al más antiguo; P6 se detiene sin leer todo; P11 reúne todo. Orden ESR: igualdad en paciente_id, orden en fecha."
+    },
+    {
+      "id": "IDX-02",
+      "type": "Indice",
+      "title": "pacientes { apellido_paterno: 1, apellido_materno: 1, nombre: 1, fecha_nacimiento: 1 } collation es strength 1",
+      "status": "PROPUESTA",
+      "src": "KB§7.1; XV P4",
+      "unico": false,
+      "motivo": "Búsqueda por apellido y detección de duplicados (P1, P4, P9). No único: existen homónimos. Las consultas deben enviar la misma collation."
+    },
+    {
+      "id": "IDX-02-OLD",
+      "type": "Indice",
+      "title": "pacientes { nombre_completo: 1, fecha_nacimiento: 1 } collation es strength 1",
+      "status": "SUPERADO",
+      "src": "XI pacientes",
+      "motivo": "Diseño original; no sirve porque en la clínica se busca por apellido (XV P4)."
+    },
+    {
+      "id": "IDX-03",
+      "type": "Indice",
+      "title": "pacientes { padecimientos.codigo: 1 } (multikey)",
+      "status": "PENDIENTE",
+      "src": "KB§7.1; XI pacientes; XV P12",
+      "unico": false,
+      "motivo": "P12. Índice más débil: colección pequeña. Posponer hasta confirmar volumen/rendimiento."
+    },
+    {
+      "id": "IDX-04",
+      "type": "Indice",
+      "title": "visitas { paciente_id: 1 } único parcial { tipo: 'inicial' }",
+      "status": "PENDIENTE",
+      "src": "KB§7.1; XN RN-04",
+      "unico": true,
+      "motivo": "Una sola visita inicial por paciente; solo si se conserva el concepto (RN-04)."
+    },
+    {
+      "id": "ENT-Paciente",
+      "type": "Entidad",
+      "title": "Paciente",
+      "status": "CONFIRMADO",
+      "src": "KB§6.1; KB§14",
+      "campos": "id, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, sexo, tipo_sangre, alergias, antecedentes_personales, padecimientos, relaciones_familiares, documentos_externos, fecha_registro",
+      "nota": "Nombres y apellidos separados; nombre completo solo como representación derivada para presentación/búsqueda."
+    },
+    {
+      "id": "ENT-Antecedentes",
+      "type": "Entidad",
+      "title": "Antecedentes y alergias",
+      "status": "CONFIRMADO",
+      "src": "KB§6.1; XC pacientes; XR",
+      "campos": "alergias[]; antecedentes.personales[descripcion, desde]; antecedentes.heredofamiliares[]",
+      "nota": "Alergias: dato de seguridad siempre visible; vacío ≠ ausente (RN-01)."
+    },
+    {
+      "id": "ENT-Visita",
+      "type": "Entidad",
+      "title": "Visita",
+      "status": "CONFIRMADO",
+      "src": "KB§6.1; KB§14",
+      "campos": "id (UUID del cliente), paciente_id, fecha, tipo (inicial/seguimiento), estado (abierta/cerrada), cerrada_en, datos_paciente {sexo, edad_anios}, resumen {peso_kg, imc}, estudios[], notas_clinicas, dieta_indicada, medicamentos_indicados",
+      "nota": "Una atención en una fecha. No es sinónimo de estudio. Inmutable una vez guardada (RN-12)."
+    },
+    {
+      "id": "ENT-Estudio",
+      "type": "Entidad",
+      "title": "Estudio",
+      "status": "CONFIRMADO",
+      "src": "KB§6.1; KB§14",
+      "campos": "id, tipo_estudio, mediciones, resultados_calculados (cuando aplique), procedencia",
+      "nota": "Catálogo de tipos y campos por definir (PC-12)."
+    },
+    {
+      "id": "ENT-Medicion",
+      "type": "Entidad",
+      "title": "Medición",
+      "status": "CONFIRMADO",
+      "src": "KB§14; XC consultas",
+      "nota": "Dato capturado (peso, estatura, circunferencia, pliegue…). Ver nodos tipo Medicion. Distinguir datos reportados por báscula de resultados calculados."
+    },
+    {
+      "id": "ENT-ResultadoCalculado",
+      "type": "Entidad",
+      "title": "Resultado calculado",
+      "status": "CONFIRMADO",
+      "src": "KB§6.2; RN-10",
+      "nota": "Cero o varios por estudio; ligado a visita, estudio y mediciones de origen."
+    },
+    {
+      "id": "ENT-Dieta",
+      "type": "Entidad",
+      "title": "Dieta indicada",
+      "status": "CONFIRMADO",
+      "src": "KB§6.2; XC consultas; XR",
+      "campos_excel": "nombre, indicaciones",
+      "nota": "Copia congelada aunque venga de plantilla."
+    },
+    {
+      "id": "ENT-Medicamento",
+      "type": "Entidad",
+      "title": "Medicamento indicado",
+      "status": "CONFIRMADO",
+      "src": "KB§6.2; XC consultas; XR",
+      "campos_excel": "nombre, dosis, frecuencia, duracion",
+      "nota": "Sin catálogo de medicamentos: ningún patrón lo gestiona."
+    },
+    {
+      "id": "ENT-DocumentoExterno",
+      "type": "Entidad",
+      "title": "Documento externo (PDF)",
+      "status": "PARCIAL",
+      "src": "KB§6.1; XC",
+      "campos": "id GridFS, paciente_id, filename, content_type (PDF), tamaño, fecha de carga, metadatos del consultorio",
+      "campos_excel_en_paciente": "archivo_id, tipo, origen, fecha_recepcion"
+    },
+    {
+      "id": "ENT-Padecimiento",
+      "type": "Entidad",
+      "title": "Padecimiento",
+      "status": "PARCIAL",
+      "src": "KB§6.1",
+      "campos": "codigo, nombre, estado/metadatos si el médico los requiere",
+      "ejemplos_excel": "OBE-3 Obesidad grado III; HTA Hipertensión arterial"
+    },
+    {
+      "id": "ENT-RelacionFamiliar",
+      "type": "Entidad",
+      "title": "Relación familiar",
+      "status": "CONFIRMADO",
+      "src": "KB§6.1; XC",
+      "campos": "paciente_id, familiar_id, parentesco, datos mínimos para mantener el inverso",
+      "campos_excel": "familiares[paciente_id, parentesco]"
+    },
+    {
+      "id": "MD-01",
+      "type": "DecisionModelado",
+      "title": "Paciente → antecedentes y alergias: EMBEBIDO",
+      "status": "PROPUESTA",
+      "src": "XR fila 1",
+      "criterio": "Una sola lectura (P4 en cada visita; alergias siempre visibles). Se capturan juntos en P1."
+    },
+    {
+      "id": "MD-02",
+      "type": "DecisionModelado",
+      "title": "Paciente → padecimientos: EMBEBIDO (arreglo)",
+      "status": "PROPUESTA",
+      "src": "XR fila 2",
+      "criterio": "Se actualiza junto con el paciente; copiar la etiqueta corta del catálogo cuesta menos que una lectura extra."
+    },
+    {
+      "id": "MD-03",
+      "type": "DecisionModelado",
+      "title": "Paciente → visitas: REFERENCIA (colección aparte con paciente_id)",
+      "status": "PROPUESTA",
+      "src": "XR fila 3",
+      "criterio": "Crece sin tope (~780 visitas en 15 años para un paciente semanal)."
+    },
+    {
+      "id": "MD-04",
+      "type": "DecisionModelado",
+      "title": "Visita → mediciones: EMBEBIDO",
+      "status": "PROPUESTA",
+      "src": "XR fila 4",
+      "criterio": "Una medición solo tiene sentido con la fecha y visita; acotadas; subdocumento flexible por tipo de estudio."
+    },
+    {
+      "id": "MD-05",
+      "type": "DecisionModelado",
+      "title": "Visita → resultados de cálculos: EMBEBIDO",
+      "status": "PROPUESTA",
+      "src": "XR fila 5",
+      "criterio": "Se calculan con las mediciones de esa visita, que no cambian; evita recalcular en P4/P6."
+    },
+    {
+      "id": "MD-06",
+      "type": "DecisionModelado",
+      "title": "Visita → dieta: EMBEBIDO (copia)",
+      "status": "PROPUESTA",
+      "src": "XR fila 6",
+      "criterio": "Hecho histórico; si una plantilla cambia, la visita conserva lo indicado."
+    },
+    {
+      "id": "MD-07",
+      "type": "DecisionModelado",
+      "title": "Visita → medicamentos: EMBEBIDO (copia)",
+      "status": "PROPUESTA",
+      "src": "XR fila 7",
+      "criterio": "Se congelan al indicarse; ninguna operación justifica un catálogo aparte."
+    },
+    {
+      "id": "MD-08",
+      "type": "DecisionModelado",
+      "title": "Paciente → familiares: REFERENCIA ({paciente_id, parentesco})",
+      "status": "PROPUESTA",
+      "src": "XR fila 8",
+      "criterio": "El familiar es otro paciente; copiar sus antecedentes los desactualizaría."
+    },
+    {
+      "id": "MD-09",
+      "type": "DecisionModelado",
+      "title": "Paciente → expediente externo: REFERENCIA (metadatos embebidos, binario en GridFS)",
+      "status": "PROPUESTA",
+      "src": "XR fila 9",
+      "criterio": "P4 solo necesita saber que existe; P11 lo entrega completo; puede rebasar 16 MB."
+    },
+    {
+      "id": "MOD-auth",
+      "type": "Modulo",
+      "title": "features/auth",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Autenticación, autorización y políticas de acceso (Médico vs Ayudante)."
+    },
+    {
+      "id": "MOD-patients",
+      "type": "Modulo",
+      "title": "features/patients",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Registro, identificación y consulta básica de pacientes."
+    },
+    {
+      "id": "MOD-visits",
+      "type": "Modulo",
+      "title": "features/visits",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Visitas, estudios, mediciones, notas y datos de la atención (dieta, medicamentos)."
+    },
+    {
+      "id": "MOD-calculations",
+      "type": "Modulo",
+      "title": "features/calculations (+ formulas/)",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Fórmulas y resultados clínicos, independientes de HTTP y MongoDB."
+    },
+    {
+      "id": "MOD-documents",
+      "type": "Modulo",
+      "title": "features/documents",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Carga de PDF, GridFS, metadatos y generación del expediente de entrega."
+    },
+    {
+      "id": "MOD-family-history",
+      "type": "Modulo",
+      "title": "features/family-history",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Vínculos familiares y antecedentes heredofamiliares."
+    },
+    {
+      "id": "MOD-conditions",
+      "type": "Modulo",
+      "title": "features/conditions",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Catálogo de padecimientos y clasificación."
+    },
+    {
+      "id": "MOD-shared",
+      "type": "Modulo",
+      "title": "shared (errors, logging, validation)",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "responsabilidad": "Utilidades transversales; no es lugar para lógica de negocio."
+    },
+    {
+      "id": "MOD-config",
+      "type": "Modulo",
+      "title": "config",
+      "status": "CONFIRMADO",
+      "src": "KB§9.2",
+      "responsabilidad": "Configuración (secretos por variables de entorno)."
+    },
+    {
+      "id": "INFRA-mongodb",
+      "type": "Infraestructura",
+      "title": "infrastructure/database/mongodb",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3; ADR-01",
+      "nota": "Replica set o Atlas necesario para transacciones (P9)."
+    },
+    {
+      "id": "INFRA-gridfs",
+      "type": "Infraestructura",
+      "title": "infrastructure/storage/gridfs",
+      "status": "PROPUESTA",
+      "src": "KB§9.3; ADR-07"
+    },
+    {
+      "id": "INFRA-pdf",
+      "type": "Infraestructura",
+      "title": "infrastructure/pdf",
+      "status": "CONFIRMADO",
+      "src": "KB§9.3",
+      "nota": "Generación del expediente de entrega (CU-11)."
+    },
+    {
+      "id": "M-PESO",
+      "type": "Medicion",
+      "title": "Peso (kg)",
+      "status": "CONFIRMADO",
+      "src": "XC peso_kg; XP P3",
+      "campo_excel": "peso_kg",
+      "rango_ejemplo": "20–400 (POR_VALIDAR)",
+      "origen": "Báscula"
+    },
+    {
+      "id": "M-ESTATURA",
+      "type": "Medicion",
+      "title": "Estatura (cm)",
+      "status": "CONFIRMADO",
+      "src": "XC altura_cm; KB§8",
+      "campo_excel": "altura_cm",
+      "rango_ejemplo": "50–250 (POR_VALIDAR)"
+    },
+    {
+      "id": "M-PLIEGUE-BICEPS",
+      "type": "Medicion",
+      "title": "Pliegue bicipital (mm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1",
+      "campo_excel": "pliegues_mm.*",
+      "origen": "Pinza"
+    },
+    {
+      "id": "M-PLIEGUE-TRICEPS",
+      "type": "Medicion",
+      "title": "Pliegue tricipital (mm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1; XC",
+      "campo_excel": "pliegues_mm.tricipital",
+      "origen": "Pinza"
+    },
+    {
+      "id": "M-PLIEGUE-SUBESCAPULAR",
+      "type": "Medicion",
+      "title": "Pliegue subescapular (mm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1; XC",
+      "campo_excel": "pliegues_mm.subescapular",
+      "origen": "Pinza"
+    },
+    {
+      "id": "M-PLIEGUE-SUPRAILIACO",
+      "type": "Medicion",
+      "title": "Pliegue suprailiaco (mm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1",
+      "campo_excel": "pliegues_mm.*",
+      "origen": "Pinza"
+    },
+    {
+      "id": "M-CIRC-MUNECA",
+      "type": "Medicion",
+      "title": "Circunferencia de muñeca (cm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1",
+      "campo_excel": "circunferencias_cm.*",
+      "origen": "Cinta"
+    },
+    {
+      "id": "M-CIRC-CINTURA",
+      "type": "Medicion",
+      "title": "Circunferencia de cintura (cm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1; XC",
+      "campo_excel": "circunferencias_cm.cintura",
+      "origen": "Cinta"
+    },
+    {
+      "id": "M-CIRC-CADERA",
+      "type": "Medicion",
+      "title": "Circunferencia de cadera (cm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1; XC",
+      "campo_excel": "circunferencias_cm.cadera",
+      "origen": "Cinta"
+    },
+    {
+      "id": "M-CIRC-BRAZO",
+      "type": "Medicion",
+      "title": "Circunferencia de brazo (cm)",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1",
+      "campo_excel": "circunferencias_cm.*",
+      "origen": "Cinta"
+    },
+    {
+      "id": "M-GLUCOSA",
+      "type": "Medicion",
+      "title": "Glucosa (mg/dL)",
+      "status": "CONFIRMADO",
+      "src": "XC glucosa_mg_dl; XP P3",
+      "campo_excel": "glucosa_mg_dl"
+    },
+    {
+      "id": "M-PRESION",
+      "type": "Medicion",
+      "title": "Presión arterial (sistólica/diastólica)",
+      "status": "CONFIRMADO",
+      "src": "XC presion; XP P3",
+      "campo_excel": "presion{sistolica, diastolica}",
+      "rango_ejemplo": "sistólica 50–300 (POR_VALIDAR)"
+    },
+    {
+      "id": "M-BIOIMPEDANCIA",
+      "type": "Medicion",
+      "title": "Bioimpedancia (datos reportados por la báscula)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1; XC porcentaje_grasa",
+      "nota": "% grasa, masa muscular, IMC, ingesta calórica diaria, edad metabólica, grasa visceral. Son datos REPORTADOS, distintos de los resultados calculados por la aplicación."
+    },
+    {
+      "id": "ATTR-SEXO",
+      "type": "Atributo",
+      "title": "Sexo del paciente",
+      "status": "CONFIRMADO",
+      "src": "KB§8.1; KB§8.2; XN RN-06; RC 2026-10-30",
+      "nota": "Valores F/M. Se guarda en el paciente y se congela en visitas.datos_paciente.sexo (procedencia RN-10)."
+    },
+    {
+      "id": "CALC-LORENTZ-H",
+      "type": "Calculo",
+      "title": "Peso ideal Lorentz (hombre)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "Basada en estatura en cm (fórmula exacta por validar)",
+      "salida": "kg"
+    },
+    {
+      "id": "CALC-LORENTZ-M",
+      "type": "Calculo",
+      "title": "Peso ideal Lorentz (mujer)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "Basada en estatura en cm (fórmula exacta por validar)",
+      "salida": "kg"
+    },
+    {
+      "id": "CALC-BROCCA",
+      "type": "Calculo",
+      "title": "Peso ideal Brocca",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "estatura_cm − 100",
+      "salida": "kg"
+    },
+    {
+      "id": "CALC-PI-PROM",
+      "type": "Calculo",
+      "title": "Promedio de peso ideal",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "Promedio de Brocca y Lorentz según sexo",
+      "salida": "kg"
+    },
+    {
+      "id": "CALC-PCT-PI",
+      "type": "Calculo",
+      "title": "Porcentaje de peso ideal (%PI)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "peso_actual / peso_ideal_referencia × 100",
+      "salida": "%"
+    },
+    {
+      "id": "CALC-IMC",
+      "type": "Calculo",
+      "title": "IMC",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1; KB§8.2; XC calculos.imc",
+      "formula_excel": "peso_kg / (estatura_m)²",
+      "salida": "kg/m²",
+      "nota": "Aparece en ambas hojas del Excel y en el resumen de evolución de CU-04."
+    },
+    {
+      "id": "CALC-COMPLEXION",
+      "type": "Calculo",
+      "title": "Complexión",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "estatura_cm / circunferencia_muñeca_cm"
+    },
+    {
+      "id": "CALC-ICC",
+      "type": "Calculo",
+      "title": "Índice cintura-cadera",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1; XC calculos.indice_cintura_cadera",
+      "formula_excel": "cintura_cm / cadera_cm"
+    },
+    {
+      "id": "CALC-SUMA-PLIEGUES",
+      "type": "Calculo",
+      "title": "Sumatoria de pliegues",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "bíceps + tríceps + subescapular + suprailiaco",
+      "salida": "mm"
+    },
+    {
+      "id": "CALC-LOG-PLIEGUES",
+      "type": "Calculo",
+      "title": "Logaritmo de la sumatoria de pliegues",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "log10(sumatoria)"
+    },
+    {
+      "id": "CALC-DENSIDAD",
+      "type": "Calculo",
+      "title": "Densidad corporal",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "1.1423 − 0.0632 × log10(sumatoria)"
+    },
+    {
+      "id": "CALC-MASA-GRASA",
+      "type": "Calculo",
+      "title": "Masa grasa",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "Ecuación basada en peso y densidad corporal (exacta por validar)",
+      "salida": "kg"
+    },
+    {
+      "id": "CALC-MLG",
+      "type": "Calculo",
+      "title": "Masa libre de grasa",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "peso_actual − masa_grasa",
+      "salida": "kg"
+    },
+    {
+      "id": "CALC-PCT-GRASA-SIRI",
+      "type": "Calculo",
+      "title": "% grasa corporal (Siri)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "Fórmula atribuida a Siri basada en densidad corporal (exacta por validar)",
+      "salida": "%"
+    },
+    {
+      "id": "CALC-AMB",
+      "type": "Calculo",
+      "title": "Área muscular del brazo (AMB)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.1",
+      "formula_excel": "A partir de circunferencia de brazo y pliegue tricipital (exacta por validar)"
+    },
+    {
+      "id": "CALC-GEB",
+      "type": "Calculo",
+      "title": "Gasto energético basal (GEB)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.2",
+      "formula_excel": "Fórmulas diferentes según sexo (exactas y entradas por validar)",
+      "salida": "kcal"
+    },
+    {
+      "id": "CALC-ETA",
+      "type": "Calculo",
+      "title": "Efecto térmico de los alimentos (ETA)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.2",
+      "formula_excel": "En ejemplos: 10 % del GEB",
+      "salida": "kcal"
+    },
+    {
+      "id": "CALC-EF",
+      "type": "Calculo",
+      "title": "Factor de actividad (EF)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.2",
+      "formula_excel": "La hoja menciona 10 %, 20 % y 30 %; ejemplos usan un % del GEB",
+      "salida": "kcal"
+    },
+    {
+      "id": "CALC-GET",
+      "type": "Calculo",
+      "title": "Gasto energético total (GET)",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.2",
+      "formula_excel": "GEB + ETA + EF",
+      "salida": "kcal"
+    },
+    {
+      "id": "CALC-RESTRICCION",
+      "type": "Calculo",
+      "title": "Restricción calórica",
+      "status": "POR_VALIDAR",
+      "src": "KB§8.2",
+      "formula_excel": "En el ejemplo: GET − 500",
+      "salida": "kcal"
+    },
+    {
+      "id": "CALC-PCT-PESO-PERDIDO",
+      "type": "Calculo",
+      "title": "% de peso perdido vs. visita inicial",
+      "status": "SUPERADO",
+      "src": "XN RN-04; XV P6",
+      "nota": "Solo aparece en el análisis de acceso del Excel; no está en KB§8 ni en CU-06. Fuera del alcance de cálculos salvo que el médico lo agregue (CF-07)."
+    },
+    {
+      "id": "CALC-REQS",
+      "type": "Requisito",
+      "title": "Ficha obligatoria antes de programar una fórmula",
+      "status": "CONFIRMADO",
+      "src": "KB§8.3",
+      "lista": [
+        "Nombre y propósito clínico",
+        "Fórmula aprobada",
+        "Unidades de entrada y salida",
+        "Campos requeridos",
+        "Condiciones en que no se puede calcular",
+        "Redondeo y precisión",
+        "Fuente y versión",
+        "Casos de prueba validados por el médico"
+      ],
+      "prohibido": "Deducir una fórmula ausente a partir de un resultado de ejemplo."
+    },
+    {
+      "id": "ADR-01",
+      "type": "ADR",
+      "title": "NoSQL con MongoDB como diseño base",
+      "status": "CONFIRMADO",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-02",
+      "type": "ADR",
+      "title": "Arquitectura modular por funcionalidades (monolito modular)",
+      "status": "CONFIRMADO",
+      "src": "KB§13; KB§9.1",
+      "nota": "Monolito modular = propuesta técnica; sin microservicios."
+    },
+    {
+      "id": "ADR-03",
+      "type": "ADR",
+      "title": "Separar nombre, apellido paterno, apellido materno y fecha de nacimiento",
+      "status": "CONFIRMADO",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-04",
+      "type": "ADR",
+      "title": "Una visita puede contener varios estudios",
+      "status": "CONFIRMADO",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-05",
+      "type": "ADR",
+      "title": "No modificar visitas ni estudios anteriores",
+      "status": "CONFIRMADO",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-06",
+      "type": "ADR",
+      "title": "Cálculos aislados de infraestructura",
+      "status": "PROPUESTA",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-07",
+      "type": "ADR",
+      "title": "Documentos PDF en GridFS",
+      "status": "PROPUESTA",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-08",
+      "type": "ADR",
+      "title": "Relaciones familiares bidireccionales y consistentes",
+      "status": "CONFIRMADO",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-09",
+      "type": "ADR",
+      "title": "Historial resumido y detalle bajo demanda",
+      "status": "PROPUESTA",
+      "src": "KB§13; KB§7.2",
+      "concrecion": "visitas.resumen {peso_kg, imc}, escrito en el mismo insert (ADR-12, RC 2026-10-30)."
+    },
+    {
+      "id": "ADR-10",
+      "type": "ADR",
+      "title": "Conservar información clínica ≥ 15 años",
+      "status": "CONFIRMADO",
+      "src": "KB§13"
+    },
+    {
+      "id": "ADR-11",
+      "type": "ADR",
+      "title": "Evitar duplicados con identidad estable e idempotencia",
+      "status": "CONFIRMADO",
+      "src": "KB§13"
+    },
+    {
+      "id": "PC-01",
+      "type": "Pendiente",
+      "title": "Fórmulas clínicas",
+      "status": "POR_VALIDAR",
+      "src": "KB§12",
+      "definir": "Confirmar fórmulas del Excel, unidades, condiciones y casos de prueba con el médico."
+    },
+    {
+      "id": "PC-02",
+      "type": "Pendiente",
+      "title": "Ciclo de vida de visitas y estudios",
+      "status": "CONFIRMADO",
+      "src": "KB§12; KB§12.1; RC 2026-10-30",
+      "definir": "Cómo se registra y cierra una visita; cuándo se puede completar la visita actual; cómo documentar correcciones sin modificar historial. Hasta resolverlo: NO implementar edición general de visitas.",
+      "resolucion": "ADR-13: estado abierta/cerrada; cierre explícito del médico y automático al final del día. Sigue pendiente cómo documentar correcciones posteriores (PC-10)."
+    },
+    {
+      "id": "PC-03",
+      "type": "Pendiente",
+      "title": "PDF externos: tamaño máximo y metadatos",
+      "status": "PARCIAL",
+      "src": "KB§12",
+      "definir": "Formato PDF confirmado; tamaño máximo y metadatos obligatorios pendientes."
+    },
+    {
+      "id": "PC-04",
+      "type": "Pendiente",
+      "title": "Contenido del expediente de entrega",
+      "status": "PARCIAL",
+      "src": "KB§12",
+      "definir": "PDF confirmado; contenido exacto y si incluye documentos externos originales o un consolidado."
+    },
+    {
+      "id": "PC-05",
+      "type": "Pendiente",
+      "title": "Alcance de familiares",
+      "status": "CONFIRMADO",
+      "src": "KB§12",
+      "definir": "Resuelto: solo antecedentes heredofamiliares; nunca expedientes completos de familiares."
+    },
+    {
+      "id": "PC-06",
+      "type": "Pendiente",
+      "title": "Administración del catálogo de padecimientos",
+      "status": "PARCIAL",
+      "src": "KB§12",
+      "definir": "El médico define los padecimientos; falta cómo se dan de alta, cambian, desactivan y corrigen."
+    },
+    {
+      "id": "PC-07",
+      "type": "Pendiente",
+      "title": "Tecnología backend",
+      "status": "PENDIENTE",
+      "src": "KB§12; KB§9.2",
+      "definir": "Lenguaje, framework, biblioteca MongoDB, validación de solicitudes y contrato de API."
+    },
+    {
+      "id": "PC-08",
+      "type": "Pendiente",
+      "title": "Modelo físico de visitas/estudios",
+      "status": "CONFIRMADO",
+      "src": "KB§12; KB§6.3; RC 2026-10-30",
+      "definir": "Qué se embebe en la visita y qué, si algo, va en documentos separados.",
+      "resolucion": "ADR-12: estudios[] embebidos en la visita, con mediciones tipadas por tipo_estudio."
+    },
+    {
+      "id": "PC-09",
+      "type": "Pendiente",
+      "title": "Matriz de roles y permisos",
+      "status": "PENDIENTE",
+      "src": "KB§12",
+      "definir": "Operaciones permitidas a médico, ayudante y posibles administradores."
+    },
+    {
+      "id": "PC-10",
+      "type": "Pendiente",
+      "title": "Correcciones posteriores",
+      "status": "PENDIENTE",
+      "src": "KB§12",
+      "definir": "Procedimiento auditable para documentar una corrección sin sobrescribir el dato original."
+    },
+    {
+      "id": "PC-11",
+      "type": "Pendiente",
+      "title": "Retención: evento de inicio y respaldo",
+      "status": "PENDIENTE",
+      "src": "KB§12",
+      "definir": "Desde qué evento se cuentan los 15 años y qué política de respaldo aplica."
+    },
+    {
+      "id": "PC-12",
+      "type": "Pendiente",
+      "title": "Catálogo de estudios y mediciones",
+      "status": "PARCIAL",
+      "src": "KB§12; RC 2026-10-30",
+      "definir": "Tipos de estudio, campos obligatorios, unidades y validaciones por tipo.",
+      "propuesta": "4 tipos por instrumento: antropometria (peso, estatura, circunferencias), pliegues_cutaneos, signos_vitales (glucosa en ayuno, presión), bioimpedancia. Supuesto del experimento; lo valida el médico."
+    },
+    {
+      "id": "CF-01",
+      "type": "Conflicto",
+      "title": "nombre_completo (Excel) vs nombre y apellidos separados",
+      "status": "RESUELTO",
+      "src": "XC; XI; XN RN-01 vs KB ADR-03; XV P4",
+      "vigente": "Campos separados nombre, apellido_paterno, apellido_materno (ADR-03). Las referencias del Excel a nombre_completo están superadas."
+    },
+    {
+      "id": "CF-02",
+      "type": "Conflicto",
+      "title": "Campo 'estudio' único en consultas vs varios estudios por visita",
+      "status": "RESUELTO",
+      "src": "XC consultas; XN RN-01 vs KB ADR-04; CU-03",
+      "vigente": "Visita con estudios[] de distintos tipos (ADR-04). Queda abierto solo el modelo físico (PC-08) y el nombre de colección (visitas/consultas)."
+    },
+    {
+      "id": "CF-03",
+      "type": "Conflicto",
+      "title": "Editar 'la consulta del día' con $set vs inmutabilidad",
+      "status": "RESUELTO",
+      "src": "XN RN-09, RN-12; XV P3, P5, P7 vs KB RN-12, §12.1; CU-03; CU-05; CU-07",
+      "vigente": "Prevalecen KB/CU: la visita y sus estudios se guardan en una sola operación (CU-03) y no se modifican; el seguimiento es una nueva visita (CU-05). La única escritura posterior permitida es CU-07: dieta y medicamentos como actualización parcial de campos autorizados, nunca sobre visitas anteriores. Se descarta el modelo del Excel en que ayudante y médico completan la misma visita.",
+      "queda_pendiente": "Resuelto por ADR-13: CU-07 solo escribe en visitas con estado abierta."
+    },
+    {
+      "id": "CF-04",
+      "type": "Conflicto",
+      "title": "P5 seguimiento = $set de notas (Excel) vs nueva visita (CU-05)",
+      "status": "RESUELTO",
+      "src": "XV P5 vs CU-05; KB RN-12",
+      "vigente": "El seguimiento se registra como NUEVA visita (CU-05)."
+    },
+    {
+      "id": "CF-05",
+      "type": "Conflicto",
+      "title": "Momento del cálculo: al guardar mediciones (Excel) vs al consultar (CU-06)",
+      "status": "RESUELTO",
+      "src": "XN RN-10; XR fila 5 vs CU-06 flujo 3-5",
+      "vigente": "Prevalece CU-06: al consultar, el sistema identifica los cálculos posibles, los calcula con fórmulas aprobadas y guarda los resultados vinculados a la visita y a las mediciones usadas. Si faltan datos, indica cuáles y no guarda resultados parciales como válidos. Visitas anteriores: mostrar resultados históricos sin modificarlas.",
+      "queda_pendiente": "PC-01: fórmulas aprobadas."
+    },
+    {
+      "id": "CF-06",
+      "type": "Conflicto",
+      "title": "Correcciones posteriores registradas en notas (Excel) vs procedimiento pendiente",
+      "status": "RESUELTO",
+      "src": "XN RN-12 vs KB RN-12, PC-10",
+      "vigente": "Prevalece la KB: se descarta registrar correcciones en notas; nunca sobrescribir el dato original.",
+      "queda_pendiente": "PC-10: procedimiento auditable que definirá el médico."
+    },
+    {
+      "id": "CF-07",
+      "type": "Conflicto",
+      "title": "% de peso perdido y visita inicial no figuran en la lista de cálculos de KB",
+      "status": "RESUELTO",
+      "src": "XN RN-04; XV P6 vs KB§8; CU-06; KB RN-04",
+      "vigente": "Prevalecen KB§8 y CU-06: el % de peso perdido no forma parte del alcance de cálculos. El concepto de visita inicial (RN-04, IDX-04) sigue condicionado a lo que confirme la KB.",
+      "queda_pendiente": "RN-04: si se conserva la distinción inicial/seguimiento."
+    },
+    {
+      "id": "CF-08",
+      "type": "Conflicto",
+      "title": "P10 'historial de familiares' (Excel) vs solo heredofamiliares",
+      "status": "RESUELTO",
+      "src": "XP P10; XV P10 vs KB PC-05; CU-10",
+      "vigente": "Solo antecedentes heredofamiliares; no leer visitas de familiares."
+    },
+    {
+      "id": "CF-09",
+      "type": "Conflicto",
+      "title": "Índice multikey de padecimientos: listado (XI) vs sin índice por ahora (XV)",
+      "status": "RESUELTO",
+      "src": "XI vs XV P12; KB§7.1",
+      "vigente": "Diferido: evaluar según volumen (KB§7.1)."
+    },
+    {
+      "id": "GAP-01",
+      "type": "Vacio",
+      "title": "El modelo de Paciente no incluye 'sexo'",
+      "status": "RESUELTO",
+      "src": "KB§6.1 vs KB§8.1-8.2; XN RN-06; RC 2026-10-30",
+      "detalle": "Lo requieren Lorentz, promedio de peso ideal, GEB y el parentesco inverso hija/hijo. Confirmar con el médico antes de modelarlo.",
+      "resolucion": "Se agrega sexo (F/M) al paciente; la visita lo congela en datos_paciente."
+    },
+    {
+      "id": "GAP-02",
+      "type": "Vacio",
+      "title": "Clave de idempotencia de visitas sin definir",
+      "status": "RESUELTO",
+      "src": "KB RN-13; KB ADR-11; RC 2026-10-30",
+      "detalle": "Se exige restricción de unicidad en BD, pero ningún índice concreto está definido.",
+      "resolucion": "ADR-14: _id UUID generado por el cliente; el reintento choca con la llave _id."
+    },
+    {
+      "id": "GAP-03",
+      "type": "Vacio",
+      "title": "KB§4 cita 'casos_de_uso.md' pero el archivo es 'casos-de-uso.md'",
+      "status": "ABIERTO",
+      "src": "KB§4"
+    },
+    {
+      "id": "GAP-04",
+      "type": "Vacio",
+      "title": "Entradas exactas del GEB (¿edad?) no documentadas",
+      "status": "ABIERTO",
+      "src": "KB§8.2",
+      "detalle": "Solo consta que la fórmula varía por sexo. No asumir edad u otras entradas."
+    },
+    {
+      "id": "AC-01",
+      "type": "CriterioAceptacion",
+      "title": "Ningún reintento crea visitas duplicadas",
+      "status": "CONFIRMADO",
+      "src": "KB§11.4"
+    },
+    {
+      "id": "AC-02",
+      "type": "CriterioAceptacion",
+      "title": "Ningún estudio asociado a un paciente inexistente",
+      "status": "CONFIRMADO",
+      "src": "KB§11.4"
+    },
+    {
+      "id": "AC-03",
+      "type": "CriterioAceptacion",
+      "title": "Una visita histórica no se modifica por endpoints ordinarios",
+      "status": "CONFIRMADO",
+      "src": "KB§11.4"
+    },
+    {
+      "id": "AC-04",
+      "type": "CriterioAceptacion",
+      "title": "Cálculos no se presentan como válidos si faltan entradas",
+      "status": "CONFIRMADO",
+      "src": "KB§11.4"
+    },
+    {
+      "id": "AC-05",
+      "type": "CriterioAceptacion",
+      "title": "Una relación familiar nunca queda en un solo extremo",
+      "status": "CONFIRMADO",
+      "src": "KB§11.4"
+    },
+    {
+      "id": "AC-06",
+      "type": "CriterioAceptacion",
+      "title": "Un documento no aparece vinculado si su archivo no se almacenó",
+      "status": "CONFIRMADO",
+      "src": "KB§11.4"
+    },
+    {
+      "id": "AC-07",
+      "type": "CriterioAceptacion",
+      "title": "Los permisos se comprueban en el servidor",
+      "status": "CONFIRMADO",
+      "src": "KB§11.4"
+    },
+    {
+      "id": "TST",
+      "type": "EstrategiaPruebas",
+      "title": "Estrategia de pruebas",
+      "status": "CONFIRMADO",
+      "src": "KB§11.1-11.3",
+      "unit": [
+        "Validaciones de pacientes y mediciones",
+        "Fórmulas aprobadas",
+        "Datos faltantes",
+        "Límites y valores inválidos",
+        "Reglas de clasificación por padecimiento",
+        "Parentesco inverso"
+      ],
+      "integration": [
+        "Persistencia/lectura MongoDB",
+        "Índices y duplicados",
+        "Visita con múltiples estudios",
+        "Inmutabilidad",
+        "Consistencia paciente-visita",
+        "Transacciones de parentesco",
+        "Carga PDF y recuperación GridFS/metadatos",
+        "Generación del PDF",
+        "Autorización por rol"
+      ],
+      "e2e": [
+        "Registrar paciente y consultar expediente",
+        "Adjuntar PDF",
+        "Visita con varios estudios",
+        "Historial resumido y detalle antiguo",
+        "Cálculos de una visita",
+        "Dieta y medicamentos según ciclo de vida",
+        "Vincular familiares y antecedentes",
+        "Clasificar y consultar por padecimiento",
+        "Generar expediente PDF"
+      ]
+    },
+    {
+      "id": "OOS-01",
+      "type": "FueraDeAlcance",
+      "title": "Portal o cuenta para pacientes",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "OOS-02",
+      "type": "FueraDeAlcance",
+      "title": "Integración con sistemas externos, laboratorios o aseguradoras",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "OOS-03",
+      "type": "FueraDeAlcance",
+      "title": "Aplicación móvil nativa",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "OOS-04",
+      "type": "FueraDeAlcance",
+      "title": "Firma electrónica",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "OOS-05",
+      "type": "FueraDeAlcance",
+      "title": "Mensajería, recordatorios y agenda de citas",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "OOS-06",
+      "type": "FueraDeAlcance",
+      "title": "Diagnóstico automatizado o recomendaciones clínicas autónomas",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "OOS-07",
+      "type": "FueraDeAlcance",
+      "title": "Corrección o eliminación de visitas y estudios históricos",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "OOS-08",
+      "type": "FueraDeAlcance",
+      "title": "Acceso automático a expedientes completos de familiares",
+      "status": "CONFIRMADO",
+      "src": "KB§2.4"
+    },
+    {
+      "id": "ADR-12",
+      "type": "ADR",
+      "title": "Visita con estudios[] embebidos y mediciones tipadas",
+      "status": "CONFIRMADO",
+      "src": "RC 2026-10-30",
+      "justificacion": "CU-03 guarda visita y estudios en una sola operación (atómica sin transacción); no cambian después (RN-12); número acotado; ningún patrón consulta un estudio suelto. Las mediciones tipadas permiten validar con $jsonSchema."
+    },
+    {
+      "id": "ADR-13",
+      "type": "ADR",
+      "title": "Ciclo de vida de la visita: estado abierta/cerrada",
+      "status": "CONFIRMADO",
+      "src": "RC 2026-10-30",
+      "justificacion": "El médico cierra la visita; si lo olvida, se cierra al final del día. CU-07 usa updateOne({_id, estado:\"abierta\"}, {$set}): el motor rechaza cambios a visitas cerradas en la misma operación."
+    },
+    {
+      "id": "ADR-14",
+      "type": "ADR",
+      "title": "_id de la visita: UUID generado por el cliente",
+      "status": "CONFIRMADO",
+      "src": "RC 2026-10-30",
+      "justificacion": "Un reintento de CU-03/CU-05 choca con la llave _id y devuelve la visita existente: idempotencia en el motor sin índice extra."
+    },
+    {
+      "id": "P13",
+      "type": "Patron",
+      "title": "Reporte: frecuencia de glucosa en ayuno elevada por año y sexo",
+      "status": "PROPUESTA",
+      "src": "RC 2026-10-30",
+      "usuario": "Médico",
+      "frecuencia": "Baja (supuesto)",
+      "datos": "estudios[signos_vitales].mediciones.glucosa_mg_dl, presion.sistolica, datos_paciente.sexo, fecha",
+      "costo": "Recorrido completo de visitas ($unwind estudios, $match glucosa >= 100, $group año × sexo)",
+      "tolera": true,
+      "nota": "Supuesto del experimento MongoDB vs PostgreSQL JSONB (Q1). Umbral ADA 100 mg/dL en ayuno; cuenta mediciones, no pacientes; año con desfase fijo -06:00."
+    },
+    {
+      "id": "P14",
+      "type": "Patron",
+      "title": "Auditoría de captura: visitas cerradas con IMC más alto",
+      "status": "PROPUESTA",
+      "src": "RC 2026-10-30",
+      "usuario": "Médico",
+      "frecuencia": "Mensual (supuesto)",
+      "datos": "estado, fecha, resumen.imc, resumen.peso_kg, paciente_id",
+      "costo": "1 L por IDX-05 + ordenamiento en memoria (Top-K) sobre resumen.imc sin índice",
+      "tolera": true,
+      "nota": "Supuesto del experimento (Q2). Detecta errores plausibles que RN-03 no rechaza, antes de que la visita cerrada quede como histórico (RN-12)."
+    },
+    {
+      "id": "IDX-05",
+      "type": "Indice",
+      "title": "visitas { fecha: 1 }",
+      "status": "PROPUESTA",
+      "src": "RC 2026-10-30",
+      "unico": false,
+      "motivo": "P14 filtra por periodo sin paciente_id; IDX-01 no le sirve. resumen.imc queda sin índice a propósito (reporte poco frecuente; costo en cada insert)."
+    }
+  ],
+  "edges": [
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-01"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-02"
+    ],
+    [
+      "ACT-AYU",
+      "ejecuta",
+      "CU-03"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-04"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-05"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-06"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-07"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-08"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-09"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-10"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-11"
+    ],
+    [
+      "ACT-MED",
+      "ejecuta",
+      "CU-12"
+    ],
+    [
+      "CU-11",
+      "limita",
+      "ACT-PAC",
+      {
+        "nota": "El paciente es destinatario, no usuario"
+      }
+    ],
+    [
+      "CU-01",
+      "realiza",
+      "P1"
+    ],
+    [
+      "CU-01",
+      "realiza",
+      "P8",
+      {
+        "nota": "Padecimientos en el mismo insert"
+      }
+    ],
+    [
+      "CU-02",
+      "realiza",
+      "P2"
+    ],
+    [
+      "CU-03",
+      "realiza",
+      "P3"
+    ],
+    [
+      "CU-04",
+      "realiza",
+      "P4"
+    ],
+    [
+      "CU-05",
+      "realiza",
+      "P5"
+    ],
+    [
+      "CU-06",
+      "realiza",
+      "P6"
+    ],
+    [
+      "CU-07",
+      "realiza",
+      "P7"
+    ],
+    [
+      "CU-08",
+      "realiza",
+      "P8"
+    ],
+    [
+      "CU-09",
+      "realiza",
+      "P9"
+    ],
+    [
+      "CU-10",
+      "realiza",
+      "P10"
+    ],
+    [
+      "CU-11",
+      "realiza",
+      "P11"
+    ],
+    [
+      "CU-12",
+      "realiza",
+      "P12"
+    ],
+    [
+      "CU-01",
+      "en_modulo",
+      "MOD-patients"
+    ],
+    [
+      "CU-02",
+      "en_modulo",
+      "MOD-documents"
+    ],
+    [
+      "CU-03",
+      "en_modulo",
+      "MOD-visits"
+    ],
+    [
+      "CU-04",
+      "en_modulo",
+      "MOD-visits"
+    ],
+    [
+      "CU-05",
+      "en_modulo",
+      "MOD-visits"
+    ],
+    [
+      "CU-06",
+      "en_modulo",
+      "MOD-calculations"
+    ],
+    [
+      "CU-07",
+      "en_modulo",
+      "MOD-visits"
+    ],
+    [
+      "CU-08",
+      "en_modulo",
+      "MOD-conditions"
+    ],
+    [
+      "CU-08",
+      "en_modulo",
+      "MOD-patients"
+    ],
+    [
+      "CU-09",
+      "en_modulo",
+      "MOD-family-history"
+    ],
+    [
+      "CU-10",
+      "en_modulo",
+      "MOD-family-history"
+    ],
+    [
+      "CU-11",
+      "en_modulo",
+      "MOD-documents"
+    ],
+    [
+      "CU-12",
+      "en_modulo",
+      "MOD-conditions"
+    ],
+    [
+      "CU-12",
+      "en_modulo",
+      "MOD-patients"
+    ],
+    [
+      "CU-01",
+      "aplica",
+      "RN-01"
+    ],
+    [
+      "CU-01",
+      "aplica",
+      "RN-02"
+    ],
+    [
+      "CU-01",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-02",
+      "aplica",
+      "RN-08"
+    ],
+    [
+      "CU-02",
+      "aplica",
+      "RN-11"
+    ],
+    [
+      "CU-02",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-02",
+      "aplica",
+      "SEC-03"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-01"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-02"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-03"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-04"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-05"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-09"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-10"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-12"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-13"
+    ],
+    [
+      "CU-03",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-04",
+      "aplica",
+      "RN-12"
+    ],
+    [
+      "CU-04",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-05",
+      "aplica",
+      "RN-01"
+    ],
+    [
+      "CU-05",
+      "aplica",
+      "RN-03"
+    ],
+    [
+      "CU-05",
+      "aplica",
+      "RN-05"
+    ],
+    [
+      "CU-05",
+      "aplica",
+      "RN-12"
+    ],
+    [
+      "CU-05",
+      "aplica",
+      "RN-13"
+    ],
+    [
+      "CU-05",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-06",
+      "aplica",
+      "RN-10"
+    ],
+    [
+      "CU-06",
+      "aplica",
+      "RN-12"
+    ],
+    [
+      "CU-06",
+      "aplica",
+      "AR-03"
+    ],
+    [
+      "CU-06",
+      "aplica",
+      "CALC-REQS"
+    ],
+    [
+      "CU-07",
+      "aplica",
+      "RN-09"
+    ],
+    [
+      "CU-07",
+      "aplica",
+      "RN-12"
+    ],
+    [
+      "CU-07",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-08",
+      "aplica",
+      "RN-07"
+    ],
+    [
+      "CU-08",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-09",
+      "aplica",
+      "RN-06"
+    ],
+    [
+      "CU-09",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-09",
+      "aplica",
+      "SEC-08"
+    ],
+    [
+      "CU-10",
+      "aplica",
+      "SEC-08"
+    ],
+    [
+      "CU-10",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-11",
+      "aplica",
+      "SEC-07"
+    ],
+    [
+      "CU-11",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "CU-12",
+      "aplica",
+      "RN-07"
+    ],
+    [
+      "CU-12",
+      "aplica",
+      "RN-14"
+    ],
+    [
+      "P1",
+      "lee",
+      "COL-pacientes",
+      {
+        "nota": "Búsqueda de duplicados"
+      }
+    ],
+    [
+      "P1",
+      "escribe",
+      "COL-pacientes"
+    ],
+    [
+      "P1",
+      "usa_indice",
+      "IDX-02"
+    ],
+    [
+      "P2",
+      "escribe",
+      "COL-expedientes"
+    ],
+    [
+      "P2",
+      "escribe",
+      "COL-pacientes",
+      {
+        "nota": "Metadato, después del archivo"
+      }
+    ],
+    [
+      "P3",
+      "lee",
+      "COL-pacientes",
+      {
+        "nota": "Existencia (RN-05)"
+      }
+    ],
+    [
+      "P3",
+      "lee",
+      "COL-visitas"
+    ],
+    [
+      "P3",
+      "escribe",
+      "COL-visitas"
+    ],
+    [
+      "P3",
+      "usa_indice",
+      "IDX-04"
+    ],
+    [
+      "P4",
+      "lee",
+      "COL-pacientes"
+    ],
+    [
+      "P4",
+      "lee",
+      "COL-visitas"
+    ],
+    [
+      "P4",
+      "usa_indice",
+      "IDX-02"
+    ],
+    [
+      "P4",
+      "usa_indice",
+      "IDX-01"
+    ],
+    [
+      "P5",
+      "escribe",
+      "COL-visitas"
+    ],
+    [
+      "P5",
+      "usa_indice",
+      "IDX-01"
+    ],
+    [
+      "P6",
+      "lee",
+      "COL-visitas"
+    ],
+    [
+      "P6",
+      "usa_indice",
+      "IDX-01"
+    ],
+    [
+      "P6",
+      "usa_indice",
+      "IDX-04"
+    ],
+    [
+      "P7",
+      "escribe",
+      "COL-visitas"
+    ],
+    [
+      "P8",
+      "escribe",
+      "COL-pacientes"
+    ],
+    [
+      "P8",
+      "lee",
+      "COL-catalogo-padecimientos"
+    ],
+    [
+      "P9",
+      "lee",
+      "COL-pacientes"
+    ],
+    [
+      "P9",
+      "escribe",
+      "COL-pacientes",
+      {
+        "nota": "2 E en transacción"
+      }
+    ],
+    [
+      "P9",
+      "usa_indice",
+      "IDX-02"
+    ],
+    [
+      "P10",
+      "lee",
+      "COL-pacientes"
+    ],
+    [
+      "P11",
+      "lee",
+      "COL-pacientes"
+    ],
+    [
+      "P11",
+      "lee",
+      "COL-visitas"
+    ],
+    [
+      "P11",
+      "lee",
+      "COL-expedientes"
+    ],
+    [
+      "P11",
+      "usa_indice",
+      "IDX-01"
+    ],
+    [
+      "P12",
+      "lee",
+      "COL-pacientes"
+    ],
+    [
+      "P12",
+      "lee",
+      "COL-catalogo-padecimientos"
+    ],
+    [
+      "P12",
+      "usa_indice",
+      "IDX-03"
+    ],
+    [
+      "IDX-01",
+      "indexa",
+      "COL-visitas"
+    ],
+    [
+      "IDX-02",
+      "indexa",
+      "COL-pacientes"
+    ],
+    [
+      "IDX-02-OLD",
+      "indexa",
+      "COL-pacientes"
+    ],
+    [
+      "IDX-03",
+      "indexa",
+      "COL-pacientes"
+    ],
+    [
+      "IDX-04",
+      "indexa",
+      "COL-visitas"
+    ],
+    [
+      "IDX-02",
+      "sustituye",
+      "IDX-02-OLD"
+    ],
+    [
+      "COL-pacientes",
+      "almacena",
+      "ENT-Paciente"
+    ],
+    [
+      "COL-visitas",
+      "almacena",
+      "ENT-Visita"
+    ],
+    [
+      "COL-expedientes",
+      "almacena",
+      "ENT-DocumentoExterno"
+    ],
+    [
+      "COL-catalogo-padecimientos",
+      "almacena",
+      "ENT-Padecimiento"
+    ],
+    [
+      "ENT-Paciente",
+      "contiene",
+      "ENT-Antecedentes",
+      {
+        "card": "1:1"
+      }
+    ],
+    [
+      "ENT-Paciente",
+      "contiene",
+      "ENT-Padecimiento",
+      {
+        "card": "1:N",
+        "nota": "copia de etiqueta del catálogo"
+      }
+    ],
+    [
+      "ENT-Paciente",
+      "contiene",
+      "ENT-RelacionFamiliar",
+      {
+        "card": "1:N"
+      }
+    ],
+    [
+      "ENT-RelacionFamiliar",
+      "referencia",
+      "ENT-Paciente",
+      {
+        "card": "N:1",
+        "nota": "familiar_id"
+      }
+    ],
+    [
+      "ENT-Paciente",
+      "referencia",
+      "ENT-DocumentoExterno",
+      {
+        "card": "1:N",
+        "nota": "metadatos embebidos + archivo_id"
+      }
+    ],
+    [
+      "ENT-Visita",
+      "referencia",
+      "ENT-Paciente",
+      {
+        "card": "N:1",
+        "nota": "paciente_id"
+      }
+    ],
+    [
+      "ENT-Visita",
+      "contiene",
+      "ENT-Estudio",
+      {
+        "card": "1:N (≥1)"
+      }
+    ],
+    [
+      "ENT-Estudio",
+      "contiene",
+      "ENT-Medicion",
+      {
+        "card": "1:N"
+      }
+    ],
+    [
+      "ENT-Estudio",
+      "contiene",
+      "ENT-ResultadoCalculado",
+      {
+        "card": "1:0..N"
+      }
+    ],
+    [
+      "ENT-ResultadoCalculado",
+      "referencia",
+      "ENT-Medicion",
+      {
+        "nota": "procedencia"
+      }
+    ],
+    [
+      "ENT-Visita",
+      "contiene",
+      "ENT-Dieta",
+      {
+        "card": "1:0..1"
+      }
+    ],
+    [
+      "ENT-Visita",
+      "contiene",
+      "ENT-Medicamento",
+      {
+        "card": "1:0..N"
+      }
+    ],
+    [
+      "MD-01",
+      "decide",
+      "ENT-Antecedentes"
+    ],
+    [
+      "MD-02",
+      "decide",
+      "ENT-Padecimiento"
+    ],
+    [
+      "MD-03",
+      "decide",
+      "ENT-Visita"
+    ],
+    [
+      "MD-04",
+      "decide",
+      "ENT-Medicion"
+    ],
+    [
+      "MD-05",
+      "decide",
+      "ENT-ResultadoCalculado"
+    ],
+    [
+      "MD-06",
+      "decide",
+      "ENT-Dieta"
+    ],
+    [
+      "MD-07",
+      "decide",
+      "ENT-Medicamento"
+    ],
+    [
+      "MD-08",
+      "decide",
+      "ENT-RelacionFamiliar"
+    ],
+    [
+      "MD-09",
+      "decide",
+      "ENT-DocumentoExterno"
+    ],
+    [
+      "MOD-patients",
+      "responsable_de",
+      "ENT-Paciente"
+    ],
+    [
+      "MOD-patients",
+      "responsable_de",
+      "ENT-Antecedentes"
+    ],
+    [
+      "MOD-patients",
+      "responsable_de",
+      "COL-pacientes"
+    ],
+    [
+      "MOD-visits",
+      "responsable_de",
+      "ENT-Visita"
+    ],
+    [
+      "MOD-visits",
+      "responsable_de",
+      "ENT-Estudio"
+    ],
+    [
+      "MOD-visits",
+      "responsable_de",
+      "ENT-Medicion"
+    ],
+    [
+      "MOD-visits",
+      "responsable_de",
+      "ENT-Dieta"
+    ],
+    [
+      "MOD-visits",
+      "responsable_de",
+      "ENT-Medicamento"
+    ],
+    [
+      "MOD-visits",
+      "responsable_de",
+      "COL-visitas"
+    ],
+    [
+      "MOD-calculations",
+      "responsable_de",
+      "ENT-ResultadoCalculado"
+    ],
+    [
+      "MOD-documents",
+      "responsable_de",
+      "ENT-DocumentoExterno"
+    ],
+    [
+      "MOD-documents",
+      "responsable_de",
+      "COL-expedientes"
+    ],
+    [
+      "MOD-conditions",
+      "responsable_de",
+      "ENT-Padecimiento"
+    ],
+    [
+      "MOD-conditions",
+      "responsable_de",
+      "COL-catalogo-padecimientos"
+    ],
+    [
+      "MOD-family-history",
+      "responsable_de",
+      "ENT-RelacionFamiliar"
+    ],
+    [
+      "MOD-patients",
+      "depende_de",
+      "INFRA-mongodb"
+    ],
+    [
+      "MOD-visits",
+      "depende_de",
+      "INFRA-mongodb"
+    ],
+    [
+      "MOD-visits",
+      "depende_de",
+      "MOD-calculations"
+    ],
+    [
+      "MOD-conditions",
+      "depende_de",
+      "INFRA-mongodb"
+    ],
+    [
+      "MOD-family-history",
+      "depende_de",
+      "INFRA-mongodb"
+    ],
+    [
+      "MOD-documents",
+      "depende_de",
+      "INFRA-gridfs"
+    ],
+    [
+      "MOD-documents",
+      "depende_de",
+      "INFRA-pdf"
+    ],
+    [
+      "MOD-documents",
+      "depende_de",
+      "INFRA-mongodb"
+    ],
+    [
+      "INFRA-gridfs",
+      "depende_de",
+      "INFRA-mongodb"
+    ],
+    [
+      "MOD-auth",
+      "depende_de",
+      "MOD-config"
+    ],
+    [
+      "INFRA-mongodb",
+      "depende_de",
+      "MOD-config"
+    ],
+    [
+      "CALC-LORENTZ-H",
+      "requiere",
+      "M-ESTATURA"
+    ],
+    [
+      "CALC-LORENTZ-H",
+      "requiere",
+      "ATTR-SEXO"
+    ],
+    [
+      "CALC-LORENTZ-M",
+      "requiere",
+      "M-ESTATURA"
+    ],
+    [
+      "CALC-LORENTZ-M",
+      "requiere",
+      "ATTR-SEXO"
+    ],
+    [
+      "CALC-BROCCA",
+      "requiere",
+      "M-ESTATURA"
+    ],
+    [
+      "CALC-PI-PROM",
+      "requiere",
+      "CALC-BROCCA"
+    ],
+    [
+      "CALC-PI-PROM",
+      "requiere",
+      "CALC-LORENTZ-H"
+    ],
+    [
+      "CALC-PI-PROM",
+      "requiere",
+      "CALC-LORENTZ-M"
+    ],
+    [
+      "CALC-PI-PROM",
+      "requiere",
+      "ATTR-SEXO"
+    ],
+    [
+      "CALC-PCT-PI",
+      "requiere",
+      "M-PESO"
+    ],
+    [
+      "CALC-PCT-PI",
+      "requiere",
+      "CALC-PI-PROM",
+      {
+        "nota": "peso ideal de referencia"
+      }
+    ],
+    [
+      "CALC-IMC",
+      "requiere",
+      "M-PESO"
+    ],
+    [
+      "CALC-IMC",
+      "requiere",
+      "M-ESTATURA"
+    ],
+    [
+      "CALC-COMPLEXION",
+      "requiere",
+      "M-ESTATURA"
+    ],
+    [
+      "CALC-COMPLEXION",
+      "requiere",
+      "M-CIRC-MUNECA"
+    ],
+    [
+      "CALC-ICC",
+      "requiere",
+      "M-CIRC-CINTURA"
+    ],
+    [
+      "CALC-ICC",
+      "requiere",
+      "M-CIRC-CADERA"
+    ],
+    [
+      "CALC-SUMA-PLIEGUES",
+      "requiere",
+      "M-PLIEGUE-BICEPS"
+    ],
+    [
+      "CALC-SUMA-PLIEGUES",
+      "requiere",
+      "M-PLIEGUE-TRICEPS"
+    ],
+    [
+      "CALC-SUMA-PLIEGUES",
+      "requiere",
+      "M-PLIEGUE-SUBESCAPULAR"
+    ],
+    [
+      "CALC-SUMA-PLIEGUES",
+      "requiere",
+      "M-PLIEGUE-SUPRAILIACO"
+    ],
+    [
+      "CALC-LOG-PLIEGUES",
+      "requiere",
+      "CALC-SUMA-PLIEGUES"
+    ],
+    [
+      "CALC-DENSIDAD",
+      "requiere",
+      "CALC-LOG-PLIEGUES"
+    ],
+    [
+      "CALC-MASA-GRASA",
+      "requiere",
+      "M-PESO"
+    ],
+    [
+      "CALC-MASA-GRASA",
+      "requiere",
+      "CALC-DENSIDAD"
+    ],
+    [
+      "CALC-MLG",
+      "requiere",
+      "M-PESO"
+    ],
+    [
+      "CALC-MLG",
+      "requiere",
+      "CALC-MASA-GRASA"
+    ],
+    [
+      "CALC-PCT-GRASA-SIRI",
+      "requiere",
+      "CALC-DENSIDAD"
+    ],
+    [
+      "CALC-AMB",
+      "requiere",
+      "M-CIRC-BRAZO"
+    ],
+    [
+      "CALC-AMB",
+      "requiere",
+      "M-PLIEGUE-TRICEPS"
+    ],
+    [
+      "CALC-GEB",
+      "requiere",
+      "ATTR-SEXO"
+    ],
+    [
+      "CALC-ETA",
+      "requiere",
+      "CALC-GEB"
+    ],
+    [
+      "CALC-EF",
+      "requiere",
+      "CALC-GEB"
+    ],
+    [
+      "CALC-GET",
+      "requiere",
+      "CALC-GEB"
+    ],
+    [
+      "CALC-GET",
+      "requiere",
+      "CALC-ETA"
+    ],
+    [
+      "CALC-GET",
+      "requiere",
+      "CALC-EF"
+    ],
+    [
+      "CALC-RESTRICCION",
+      "requiere",
+      "CALC-GET"
+    ],
+    [
+      "CALC-PCT-PESO-PERDIDO",
+      "requiere",
+      "M-PESO"
+    ],
+    [
+      "CALC-PCT-PESO-PERDIDO",
+      "requiere",
+      "IDX-04",
+      {
+        "nota": "línea base = visita inicial"
+      }
+    ],
+    [
+      "CALC-LORENTZ-H",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-LORENTZ-M",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-BROCCA",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-PI-PROM",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-PCT-PI",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-IMC",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-IMC",
+      "usado_en",
+      "CU-04",
+      {
+        "nota": "evolución"
+      }
+    ],
+    [
+      "CALC-COMPLEXION",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-ICC",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-SUMA-PLIEGUES",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-LOG-PLIEGUES",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-DENSIDAD",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-MASA-GRASA",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-MLG",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-PCT-GRASA-SIRI",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-AMB",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-GEB",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-ETA",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-EF",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-GET",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-RESTRICCION",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "CALC-PCT-PESO-PERDIDO",
+      "usado_en",
+      "CU-06"
+    ],
+    [
+      "MOD-calculations",
+      "responsable_de",
+      "CALC-REQS"
+    ],
+    [
+      "M-BIOIMPEDANCIA",
+      "afecta",
+      "CU-03",
+      {
+        "nota": "Dato reportado, no calculado"
+      }
+    ],
+    [
+      "PC-01",
+      "afecta",
+      "CU-06"
+    ],
+    [
+      "PC-01",
+      "afecta",
+      "MOD-calculations"
+    ],
+    [
+      "PC-01",
+      "afecta",
+      "RN-03"
+    ],
+    [
+      "PC-01",
+      "afecta",
+      "RN-10"
+    ],
+    [
+      "PC-02",
+      "afecta",
+      "CU-03"
+    ],
+    [
+      "PC-02",
+      "afecta",
+      "CU-05"
+    ],
+    [
+      "PC-02",
+      "afecta",
+      "CU-07"
+    ],
+    [
+      "PC-02",
+      "afecta",
+      "RN-09"
+    ],
+    [
+      "PC-02",
+      "afecta",
+      "RN-12"
+    ],
+    [
+      "PC-03",
+      "afecta",
+      "CU-02"
+    ],
+    [
+      "PC-03",
+      "afecta",
+      "RN-08"
+    ],
+    [
+      "PC-03",
+      "afecta",
+      "ENT-DocumentoExterno"
+    ],
+    [
+      "PC-04",
+      "afecta",
+      "CU-11"
+    ],
+    [
+      "PC-05",
+      "afecta",
+      "CU-10"
+    ],
+    [
+      "PC-05",
+      "afecta",
+      "P10"
+    ],
+    [
+      "PC-06",
+      "afecta",
+      "CU-08"
+    ],
+    [
+      "PC-06",
+      "afecta",
+      "CU-12"
+    ],
+    [
+      "PC-06",
+      "afecta",
+      "COL-catalogo-padecimientos"
+    ],
+    [
+      "PC-07",
+      "afecta",
+      "PROY"
+    ],
+    [
+      "PC-08",
+      "afecta",
+      "COL-visitas"
+    ],
+    [
+      "PC-08",
+      "afecta",
+      "ENT-Estudio"
+    ],
+    [
+      "PC-08",
+      "afecta",
+      "CU-03"
+    ],
+    [
+      "PC-09",
+      "afecta",
+      "RN-14"
+    ],
+    [
+      "PC-09",
+      "afecta",
+      "MOD-auth"
+    ],
+    [
+      "PC-10",
+      "afecta",
+      "RN-12"
+    ],
+    [
+      "PC-10",
+      "afecta",
+      "CU-05"
+    ],
+    [
+      "PC-11",
+      "afecta",
+      "RN-11"
+    ],
+    [
+      "PC-12",
+      "afecta",
+      "ENT-Estudio"
+    ],
+    [
+      "PC-12",
+      "afecta",
+      "RN-02"
+    ],
+    [
+      "PC-12",
+      "afecta",
+      "RN-03"
+    ],
+    [
+      "PC-12",
+      "afecta",
+      "CU-03"
+    ],
+    [
+      "CF-01",
+      "afecta",
+      "COL-pacientes"
+    ],
+    [
+      "CF-01",
+      "afecta",
+      "IDX-02-OLD"
+    ],
+    [
+      "CF-01",
+      "afecta",
+      "RN-01"
+    ],
+    [
+      "CF-01",
+      "resuelto_por",
+      "ADR-03"
+    ],
+    [
+      "CF-02",
+      "afecta",
+      "COL-visitas"
+    ],
+    [
+      "CF-02",
+      "afecta",
+      "RN-01"
+    ],
+    [
+      "CF-02",
+      "resuelto_por",
+      "ADR-04"
+    ],
+    [
+      "CF-02",
+      "resuelto_por",
+      "PC-08"
+    ],
+    [
+      "CF-03",
+      "afecta",
+      "CU-03"
+    ],
+    [
+      "CF-03",
+      "afecta",
+      "CU-07"
+    ],
+    [
+      "CF-03",
+      "afecta",
+      "RN-09"
+    ],
+    [
+      "CF-03",
+      "afecta",
+      "RN-12"
+    ],
+    [
+      "CF-03",
+      "resuelto_por",
+      "CU-03"
+    ],
+    [
+      "CF-03",
+      "resuelto_por",
+      "CU-05"
+    ],
+    [
+      "CF-03",
+      "resuelto_por",
+      "CU-07"
+    ],
+    [
+      "CF-03",
+      "resuelto_por",
+      "ADR-05"
+    ],
+    [
+      "CF-03",
+      "afecta",
+      "PC-02"
+    ],
+    [
+      "CF-04",
+      "afecta",
+      "P5"
+    ],
+    [
+      "CF-04",
+      "afecta",
+      "CU-05"
+    ],
+    [
+      "CF-04",
+      "resuelto_por",
+      "ADR-05"
+    ],
+    [
+      "CF-05",
+      "afecta",
+      "CU-06"
+    ],
+    [
+      "CF-05",
+      "afecta",
+      "RN-10"
+    ],
+    [
+      "CF-05",
+      "afecta",
+      "MD-05"
+    ],
+    [
+      "CF-05",
+      "resuelto_por",
+      "CU-06"
+    ],
+    [
+      "CF-05",
+      "afecta",
+      "PC-01"
+    ],
+    [
+      "CF-06",
+      "afecta",
+      "RN-12"
+    ],
+    [
+      "CF-06",
+      "resuelto_por",
+      "RN-12"
+    ],
+    [
+      "CF-06",
+      "afecta",
+      "PC-10"
+    ],
+    [
+      "CF-07",
+      "afecta",
+      "RN-04"
+    ],
+    [
+      "CF-07",
+      "afecta",
+      "IDX-04"
+    ],
+    [
+      "CF-07",
+      "afecta",
+      "CALC-PCT-PESO-PERDIDO"
+    ],
+    [
+      "CF-07",
+      "resuelto_por",
+      "CU-06"
+    ],
+    [
+      "CF-08",
+      "afecta",
+      "P10"
+    ],
+    [
+      "CF-08",
+      "afecta",
+      "CU-10"
+    ],
+    [
+      "CF-08",
+      "resuelto_por",
+      "PC-05"
+    ],
+    [
+      "CF-09",
+      "afecta",
+      "IDX-03"
+    ],
+    [
+      "GAP-01",
+      "afecta",
+      "ATTR-SEXO"
+    ],
+    [
+      "GAP-01",
+      "afecta",
+      "ENT-Paciente"
+    ],
+    [
+      "GAP-01",
+      "afecta",
+      "RN-06"
+    ],
+    [
+      "GAP-01",
+      "afecta",
+      "CU-06"
+    ],
+    [
+      "GAP-02",
+      "afecta",
+      "RN-13"
+    ],
+    [
+      "GAP-02",
+      "afecta",
+      "CU-03"
+    ],
+    [
+      "GAP-02",
+      "afecta",
+      "CU-05"
+    ],
+    [
+      "GAP-02",
+      "afecta",
+      "COL-visitas"
+    ],
+    [
+      "GAP-04",
+      "afecta",
+      "CALC-GEB"
+    ],
+    [
+      "ADR-01",
+      "justifica",
+      "INFRA-mongodb"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "PROY"
+    ],
+    [
+      "ADR-03",
+      "justifica",
+      "IDX-02"
+    ],
+    [
+      "ADR-03",
+      "justifica",
+      "ENT-Paciente"
+    ],
+    [
+      "ADR-04",
+      "justifica",
+      "ENT-Estudio"
+    ],
+    [
+      "ADR-05",
+      "justifica",
+      "RN-12"
+    ],
+    [
+      "ADR-06",
+      "justifica",
+      "AR-03"
+    ],
+    [
+      "ADR-06",
+      "justifica",
+      "MOD-calculations"
+    ],
+    [
+      "ADR-07",
+      "justifica",
+      "COL-expedientes"
+    ],
+    [
+      "ADR-07",
+      "justifica",
+      "INFRA-gridfs"
+    ],
+    [
+      "ADR-08",
+      "justifica",
+      "RN-06"
+    ],
+    [
+      "ADR-09",
+      "justifica",
+      "P4"
+    ],
+    [
+      "ADR-10",
+      "justifica",
+      "RN-11"
+    ],
+    [
+      "ADR-11",
+      "justifica",
+      "RN-13"
+    ],
+    [
+      "AC-01",
+      "verifica",
+      "RN-13"
+    ],
+    [
+      "AC-02",
+      "verifica",
+      "RN-05"
+    ],
+    [
+      "AC-03",
+      "verifica",
+      "RN-12"
+    ],
+    [
+      "AC-04",
+      "verifica",
+      "RN-10"
+    ],
+    [
+      "AC-05",
+      "verifica",
+      "RN-06"
+    ],
+    [
+      "AC-06",
+      "verifica",
+      "RN-08"
+    ],
+    [
+      "AC-07",
+      "verifica",
+      "RN-14"
+    ],
+    [
+      "SEC-01",
+      "protege",
+      "RN-11"
+    ],
+    [
+      "SEC-03",
+      "protege",
+      "RN-08"
+    ],
+    [
+      "SEC-07",
+      "protege",
+      "CU-11"
+    ],
+    [
+      "SEC-08",
+      "protege",
+      "CU-10"
+    ],
+    [
+      "SEC-05",
+      "protege",
+      "MOD-shared"
+    ],
+    [
+      "SEC-06",
+      "protege",
+      "MOD-config"
+    ],
+    [
+      "AR-08",
+      "protege",
+      "INFRA-mongodb"
+    ],
+    [
+      "OOS-01",
+      "limita",
+      "ACT-PAC"
+    ],
+    [
+      "OOS-02",
+      "limita",
+      "PROY"
+    ],
+    [
+      "OOS-06",
+      "limita",
+      "MOD-calculations"
+    ],
+    [
+      "OOS-07",
+      "limita",
+      "CU-03"
+    ],
+    [
+      "OOS-07",
+      "limita",
+      "CU-05"
+    ],
+    [
+      "OOS-07",
+      "limita",
+      "RN-11"
+    ],
+    [
+      "OOS-08",
+      "limita",
+      "CU-10"
+    ],
+    [
+      "OOS-03",
+      "limita",
+      "PROY"
+    ],
+    [
+      "OOS-04",
+      "limita",
+      "PROY"
+    ],
+    [
+      "OOS-05",
+      "limita",
+      "PROY"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "AR-01"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "AR-02"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "AR-04"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "AR-05"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "AR-06"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "AR-07"
+    ],
+    [
+      "ADR-02",
+      "justifica",
+      "AR-08"
+    ],
+    [
+      "ADR-04",
+      "justifica",
+      "CU-03"
+    ],
+    [
+      "ADR-04",
+      "justifica",
+      "CU-05"
+    ],
+    [
+      "SEC-02",
+      "protege",
+      "MOD-shared"
+    ],
+    [
+      "SEC-04",
+      "protege",
+      "MOD-shared"
+    ],
+    [
+      "SEC-09",
+      "protege",
+      "PROY"
+    ],
+    [
+      "GAP-03",
+      "afecta",
+      "PROY"
+    ],
+    [
+      "AC-01",
+      "verifica",
+      "TST"
+    ],
+    [
+      "AC-03",
+      "verifica",
+      "TST"
+    ],
+    [
+      "TST",
+      "protege",
+      "PROY"
+    ],
+    [
+      "M-PESO",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-ESTATURA",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-PLIEGUE-BICEPS",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-PLIEGUE-TRICEPS",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-PLIEGUE-SUBESCAPULAR",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-PLIEGUE-SUPRAILIACO",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-CIRC-MUNECA",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-CIRC-CINTURA",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-CIRC-CADERA",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-CIRC-BRAZO",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-GLUCOSA",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-PRESION",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "M-BIOIMPEDANCIA",
+      "es_un",
+      "ENT-Medicion"
+    ],
+    [
+      "ATTR-SEXO",
+      "es_un",
+      "ENT-Paciente",
+      {
+        "nota": "atributo propuesto, no confirmado"
+      }
+    ],
+    [
+      "RN-03",
+      "afecta",
+      "M-PESO"
+    ],
+    [
+      "RN-03",
+      "afecta",
+      "M-ESTATURA"
+    ],
+    [
+      "RN-03",
+      "afecta",
+      "M-PRESION"
+    ],
+    [
+      "PC-08",
+      "resuelto_por",
+      "ADR-12"
+    ],
+    [
+      "ADR-12",
+      "justifica",
+      "COL-visitas"
+    ],
+    [
+      "ADR-12",
+      "justifica",
+      "ENT-Estudio"
+    ],
+    [
+      "PC-02",
+      "resuelto_por",
+      "ADR-13"
+    ],
+    [
+      "CF-03",
+      "resuelto_por",
+      "ADR-13"
+    ],
+    [
+      "ADR-13",
+      "justifica",
+      "ENT-Visita"
+    ],
+    [
+      "GAP-02",
+      "resuelto_por",
+      "ADR-14"
+    ],
+    [
+      "ADR-14",
+      "justifica",
+      "RN-13"
+    ],
+    [
+      "GAP-01",
+      "resuelto_por",
+      "ATTR-SEXO"
+    ],
+    [
+      "P13",
+      "lee",
+      "COL-visitas"
+    ],
+    [
+      "P14",
+      "lee",
+      "COL-visitas"
+    ],
+    [
+      "P14",
+      "usa_indice",
+      "IDX-05"
+    ],
+    [
+      "IDX-05",
+      "indexa",
+      "COL-visitas"
+    ]
+  ]
+}
