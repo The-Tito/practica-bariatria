@@ -2,6 +2,15 @@
 
 Decisiones y cambios del contexto del proyecto, del más reciente al más antiguo. Cada entrada indica los nodos del KG afectados.
 
+## 2026-10-30 — Medicación vigente estructurada y nueva Q1 del experimento (KG v1.3.0)
+
+- **Motivo:** el arreglo que desanidaba Q1 (`estudios[]`) es polimórfico. En el 70 % de sus elementos el filtro de glucosa no tiene campo que evaluar, la agrupación no usaba ningún campo del elemento y no había cálculo por fila. Q1 medía una carga más ligera que la del playbook (desanidar, filtrar, calcular por fila, agrupar).
+- **ADR-15:** `medicamentos[]` deja de ser texto libre y registra la **medicación vigente** en cada visita, con elementos homogéneos: `nombre`, `categoria` (antidiabetico, antihipertensivo, suplemento, gastroprotector, antiobesidad), `dosis_mg` (double, por toma), `tomas_por_dia` (int) y `duracion_dias` (int). Es obligatorio y puede ir vacío. Ventajas para el proyecto: dosis validables, detección de fármacos duplicados y seguimiento del retiro de antidiabéticos y antihipertensivos, uno de los resultados con que se evalúa un tratamiento bariátrico.
+- **P15 (PROPUESTA), nueva Q1 del experimento:** medicación crónica por año y fármaco: desanidar `medicamentos`, filtrar `duracion_dias >= 60`, agrupar por año × medicamento con prescripciones, dosis diaria total y promedio (`dosis_mg × tomas_por_dia`).
+- **P13** se conserva como reporte propuesto del proyecto, pero deja de ser la Q1 del experimento.
+- `estudios[]` no cambia: su forma polimórfica sigue siendo correcta para el modelo.
+- Nodos afectados: ENT-Medicamento, COL-visitas, P13; nuevos ADR-15 y P15.
+
 ## 2026-10-30 — Modelo físico de visitas y reportes de población (KG v1.2.0)
 
 Contexto: práctica de medición MongoDB vs PostgreSQL JSONB, que se adapta a este proyecto. El detalle y la justificación de cada punto están en el repositorio del experimento (`experimento/docs/decisiones.md`). Decidió el equipo; los puntos clínicos quedan por validar con el médico.

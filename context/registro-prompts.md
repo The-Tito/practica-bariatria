@@ -21,3 +21,10 @@ Solicitudes relevantes hechas al asistente y su resultado.
 **Prompt:** «Antes de avanzar finalicemos y dejemos listo la parte NoSQL, resolvamos lo faltante y los problemas ya que esta es la base, y sobre todo que cumpla con los requisitos y si estamos simulando un caso real, lo que hagamos debe tener un por qué, no solo para cumplir los requisitos.»
 
 **Resultado:** KG v1.2.0. Se cierran PC-08 (ADR-12), PC-02 (ADR-13), GAP-01 y GAP-02 (ADR-14); se agregan los reportes P13 y P14 y el índice IDX-05 (ver `registro-cambios.md`). El análisis completo de Q1 y Q2 está en el repositorio del experimento (`docs/decisiones.md`).
+
+## 2026-10-30 — Elementos homogéneos en el arreglo de Q1
+
+**Prompt:** «No es posible preguntarle al profesor, lo decidamos acá, desglósame el punto 3 y si conviene hacerlo.» Después: «Sí, avanza con C.»
+
+**Resultado:** KG v1.3.0. ADR-15 (medicación vigente estructurada) y P15 como nueva Q1 del experimento; P13 deja de ser Q1 (ver `registro-cambios.md`). Se acepta y se reporta la compresión TOAST de ~14 % de las filas JSONB, en vez de recortar los datos.
+
