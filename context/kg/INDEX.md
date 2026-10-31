@@ -1,7 +1,7 @@
 # Índice del grafo de conocimiento
 
 > Generado por `python3 context/kg/kg.py render` desde `graph.json`. No editar a mano.
-> Versión 1.2.0 · actualizado 2026-10-30 · 194 nodos · 395 aristas.
+> Versión 1.3.0 · actualizado 2026-10-30 · 196 nodos · 398 aristas.
 
 ## Precedencia de fuentes
 
@@ -52,7 +52,7 @@
 | CU-11 | Entregar expediente clínico (PDF) | PARCIAL | 8 |
 | CU-12 | Consultar pacientes por padecimiento | CONFIRMADO | 7 |
 
-## Patron (14)
+## Patron (15)
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
@@ -70,6 +70,7 @@
 | P12 | Listar pacientes por padecimiento | CONFIRMADO | 4 |
 | P13 | Reporte: frecuencia de glucosa en ayuno elevada por año y sexo | PROPUESTA | 1 |
 | P14 | Auditoría de captura: visitas cerradas con IMC más alto | PROPUESTA | 2 |
+| P15 | Reporte: medicación crónica por año y fármaco | PROPUESTA | 1 |
 
 ## Regla (14)
 
@@ -122,7 +123,7 @@
 | ID | Título | Estado | Grado |
 |---|---|---|---|
 | COL-pacientes | pacientes | PROPUESTA | 17 |
-| COL-visitas | visitas (Excel: consultas) | PROPUESTA | 18 |
+| COL-visitas | visitas (Excel: consultas) | PROPUESTA | 20 |
 | COL-expedientes | expedientes.files / expedientes.chunks (GridFS) | PROPUESTA | 5 |
 | COL-catalogo-padecimientos | catálogo de padecimientos | PROPUESTA | 5 |
 
@@ -148,7 +149,7 @@
 | ENT-Medicion | Medición | CONFIRMADO | 17 |
 | ENT-ResultadoCalculado | Resultado calculado | CONFIRMADO | 4 |
 | ENT-Dieta | Dieta indicada | CONFIRMADO | 3 |
-| ENT-Medicamento | Medicamento indicado | CONFIRMADO | 3 |
+| ENT-Medicamento | Medicamento indicado | CONFIRMADO | 4 |
 | ENT-DocumentoExterno | Documento externo (PDF) | PARCIAL | 5 |
 | ENT-Padecimiento | Padecimiento | PARCIAL | 4 |
 | ENT-RelacionFamiliar | Relación familiar | CONFIRMADO | 4 |
@@ -245,7 +246,7 @@
 |---|---|---|---|
 | CALC-REQS | Ficha obligatoria antes de programar una fórmula | CONFIRMADO | 2 |
 
-## ADR (14)
+## ADR (15)
 
 | ID | Título | Estado | Grado |
 |---|---|---|---|
@@ -263,6 +264,7 @@
 | ADR-12 | Visita con estudios[] embebidos y mediciones tipadas | CONFIRMADO | 3 |
 | ADR-13 | Ciclo de vida de la visita: estado abierta/cerrada | CONFIRMADO | 3 |
 | ADR-14 | _id de la visita: UUID generado por el cliente | CONFIRMADO | 2 |
+| ADR-15 | Medicación vigente estructurada en la visita | CONFIRMADO | 2 |
 
 ## Pendiente (12)
 

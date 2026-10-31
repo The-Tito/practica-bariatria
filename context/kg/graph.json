@@ -1,7 +1,7 @@
 {
   "meta": {
     "nombre": "KG Bariatría",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "actualizado": "2026-10-30",
     "descripcion": "Grafo de conocimiento del proyecto: única puerta de entrada al contexto. Cada nodo lleva su estado de conocimiento y su procedencia (src).",
     "fuentes": {
@@ -906,8 +906,8 @@
       "campos_excel": "_id, paciente_id, fecha, tipo, estudio, mediciones{peso_kg, altura_cm, porcentaje_grasa, pliegues_mm{}, circunferencias_cm{}, glucosa_mg_dl, presion{sistolica, diastolica}}, calculos{imc, indice_cintura_cadera}, notas, dieta{nombre, indicaciones}, medicamentos[nombre, dosis, frecuencia, duracion]",
       "ajuste_vigente": "'estudio' único → 'estudios[]' (cada uno con tipo_estudio, mediciones, resultados_calculados) por ADR-04. Nombre de colección: KB usa 'visitas', Excel 'consultas'.",
       "restriccion": "No crear una colección por cada tipo de estudio sin justificación de acceso.",
-      "patrones": "P3, P4, P5, P6, P7, P11, P13, P14",
-      "campos_vigentes": "_id UUID, paciente_id, fecha, tipo, estado, cerrada_en, datos_paciente{sexo, edad_anios}, resumen{peso_kg, imc}, estudios[{tipo_estudio, mediciones{...}, resultados_calculados{...}}], notas, dieta{nombre, indicaciones}, medicamentos[{nombre, dosis, frecuencia, duracion}]"
+      "patrones": "P3, P4, P5, P6, P7, P11, P13, P14, P15",
+      "campos_vigentes": "_id UUID, paciente_id, fecha, tipo, estado, cerrada_en, datos_paciente{sexo, edad_anios}, resumen{peso_kg, imc}, estudios[{tipo_estudio, mediciones{...}, resultados_calculados{...}}], notas, dieta{nombre, indicaciones}, medicamentos[{nombre, categoria, dosis_mg, tomas_por_dia, duracion_dias}] (obligatorio, puede ir vacío)"
     },
     {
       "id": "COL-expedientes",
@@ -1037,9 +1037,10 @@
       "type": "Entidad",
       "title": "Medicamento indicado",
       "status": "CONFIRMADO",
-      "src": "KB§6.2; XC consultas; XR",
+      "src": "KB§6.2; XC consultas; XR; RC 2026-10-30 (v1.3.0)",
       "campos_excel": "nombre, dosis, frecuencia, duracion",
-      "nota": "Sin catálogo de medicamentos: ningún patrón lo gestiona."
+      "nota": "Medicación vigente en cada visita, elementos homogéneos (ADR-15). Sin catálogo de medicamentos: ningún patrón lo gestiona.",
+      "campos_vigentes": "nombre, categoria (antidiabetico | antihipertensivo | suplemento | gastroprotector | antiobesidad), dosis_mg (double, por toma), tomas_por_dia (int), duracion_dias (int)"
     },
     {
       "id": "ENT-DocumentoExterno",
@@ -2025,7 +2026,7 @@
       "datos": "estudios[signos_vitales].mediciones.glucosa_mg_dl, presion.sistolica, datos_paciente.sexo, fecha",
       "costo": "Recorrido completo de visitas ($unwind estudios, $match glucosa >= 100, $group año × sexo)",
       "tolera": true,
-      "nota": "Supuesto del experimento MongoDB vs PostgreSQL JSONB (Q1). Umbral ADA 100 mg/dL en ayuno; cuenta mediciones, no pacientes; año con desfase fijo -06:00."
+      "nota": "Reporte propuesto del proyecto. Fue la Q1 del experimento hasta la v1.3.0, cuando la sustituyó P15 porque estudios[] es polimórfico. Umbral ADA 100 mg/dL en ayuno; cuenta mediciones, no pacientes."
     },
     {
       "id": "P14",
@@ -2048,6 +2049,27 @@
       "src": "RC 2026-10-30",
       "unico": false,
       "motivo": "P14 filtra por periodo sin paciente_id; IDX-01 no le sirve. resumen.imc queda sin índice a propósito (reporte poco frecuente; costo en cada insert)."
+    },
+    {
+      "id": "ADR-15",
+      "type": "ADR",
+      "title": "Medicación vigente estructurada en la visita",
+      "status": "CONFIRMADO",
+      "src": "RC 2026-10-30 (v1.3.0)",
+      "justificacion": "Dosis validables (dosis_mg, tomas_por_dia), detección de fármacos duplicados y seguimiento del retiro de antidiabéticos y antihipertensivos (resultado clínico del tratamiento). Elementos homogéneos: es el arreglo que desanida la Q1 del experimento."
+    },
+    {
+      "id": "P15",
+      "type": "Patron",
+      "title": "Reporte: medicación crónica por año y fármaco",
+      "status": "PROPUESTA",
+      "src": "RC 2026-10-30 (v1.3.0)",
+      "usuario": "Médico",
+      "frecuencia": "Baja (supuesto)",
+      "datos": "medicamentos[].nombre, dosis_mg, tomas_por_dia, duracion_dias, fecha",
+      "costo": "Recorrido completo de visitas ($unwind medicamentos, $match duracion_dias >= 60, $group año × medicamento con dosis diaria = dosis_mg × tomas_por_dia)",
+      "tolera": true,
+      "nota": "Q1 del experimento MongoDB vs PostgreSQL JSONB (desde v1.3.0). Año con desfase fijo -06:00."
     }
   ],
   "edges": [
@@ -4097,6 +4119,21 @@
     [
       "IDX-05",
       "indexa",
+      "COL-visitas"
+    ],
+    [
+      "ADR-15",
+      "justifica",
+      "ENT-Medicamento"
+    ],
+    [
+      "ADR-15",
+      "justifica",
+      "COL-visitas"
+    ],
+    [
+      "P15",
+      "lee",
       "COL-visitas"
     ]
   ]
